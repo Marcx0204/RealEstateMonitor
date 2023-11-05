@@ -1,7 +1,10 @@
+import pandas as pd
 from data.raw.read_data import read_data
 
 def clean_data():
     df = read_data()
+
+    df_initial = df.copy()  # Eine Kopie der ursprünglichen Daten zur späteren Verwendung.
 
     # Doppelte Einträge entfernen
     df = df.drop_duplicates()
@@ -150,10 +153,13 @@ def clean_data():
     # Entfernen der Einträge, die keine gültige PLZ haben
     df_no_outliers = df_no_outliers[df_no_outliers['PLZ'].isin(valid_plz)]
 
-
     # Entfernen von Zeilen, wo 'Erwerbsart' oder 'Erwerbsdatum' fehlt
+    df_missing_values = df_no_outliers[df_no_outliers[['ErwArt', 'Erwerbsdatum']].isna().any(axis=1)]
     df_no_outliers = df_no_outliers.dropna(subset=['ErwArt', 'Erwerbsdatum'])
 
+    df_removed = pd.concat([df_initial[~df_initial.index.isin(df_cleaned.index)],
+                            df_before_removal[~df_before_removal.index.isin(df_no_outliers.index)],
+                            df_missing_values])
 
-    return df_no_outliers
+    return df_no_outliers, df_removed
 
