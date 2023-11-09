@@ -3,6 +3,8 @@ from data.clean_data import clean_data
 from data.processed.save_data import save_data
 from data.filter_data import filter_by_date
 from data.filter_data import filter_by_zip
+from data.filter_data import filter_by_bausperre
+from data.filter_data import filter_by_price_range
 
 
 def save_data(cleaned_df, removed_df, cleaned_path, removed_path):
@@ -33,16 +35,6 @@ def display_cleaned_data():
         print("Die Datei wurde nicht gefunden. Bitte zuerst die Daten bereinigen.")
 
 
-def display_data(data):
-    if isinstance(data, pd.DataFrame):
-        print(data)
-    else:
-        try:
-            df = pd.read_excel(data)
-            print(df)
-        except FileNotFoundError:
-            print(f"Die Datei {data} wurde nicht gefunden. Bitte zuerst die Daten bereinigen und speichern.")
-
 def filter_data_by_date():
     start_date = input("Bitte Startdatum eingeben (YYYY-MM-DD): ")
     end_date = input("Bitte Enddatum eingeben (YYYY-MM-DD): ")
@@ -63,6 +55,42 @@ def filter_data_by_zip():
     display_data(df_filtered_by_zip)  # Verwenden Sie die display_data Funktion für Konsistenz
 
 
+def filter_data_by_bausperre():
+    bausperre_status = input("Geben Sie den Bausperre Status ein ('true' oder 'false'): ")
+    df_cleaned, _ = clean_data()
+    df_filtered_by_bausperre = filter_by_bausperre(df_cleaned, bausperre_status)
+
+    if df_filtered_by_bausperre is not None:
+        display_data(df_filtered_by_bausperre)
+    else:
+        print("Keine Daten zum Anzeigen.")
+
+
+def filter_data_by_price():
+    """Ermöglicht dem Benutzer, Daten nach einem Preisbereich zu filtern."""
+    min_price = float(input("Geben Sie den Mindestpreis ein: "))
+    max_price = float(input("Geben Sie den Höchstpreis ein: "))
+
+    df_cleaned, _ = clean_data()
+    df_filtered_by_price = filter_by_price_range(df_cleaned, min_price, max_price)
+
+    display_data(df_filtered_by_price)
+
+def display_data(data):
+    if isinstance(data, pd.DataFrame):
+        print(data)
+    else:
+        try:
+            df = pd.read_excel(data)
+            print(df)
+        except FileNotFoundError:
+            print(f"Die Datei {data} wurde nicht gefunden. Bitte zuerst die Daten bereinigen und speichern.")
+
+
+
+
+
+
 
 
 def main():
@@ -71,11 +99,13 @@ def main():
         print("1 - Daten bereinigen und speichern")
         print("2 - Bereinigte Daten ausgeben")
         print("3 - Entfernte Daten ausgeben")
-        print("4 - Programm beenden")
-        print("5 - Daten nach Datum filtern")
-        print("6 - Daten nach PLZ filtern")
+        print("4 - Daten nach Datum filtern")
+        print("5 - Daten nach PLZ filtern")
+        print("6 - Daten nach Bausperre filtern")
+        print("7 - Daten nach Preis filtern")
+        print("8 - Programm beenden")
 
-        choice = input("Bitte wählen Sie eine Option (1, 2, 3, 4, 5): ")
+        choice = input("Bitte wählen Sie eine Option (1, 2, 3, 4, 5, 6, 7, 8): ")
 
         if choice == '1':
             clean_and_save_data()
@@ -86,14 +116,18 @@ def main():
             removed_path = 'data/processed/entfernte_kaufpreissammlung.xlsx'
             display_data(removed_path)
         elif choice == '4':
+            filter_data_by_date()
+        elif choice == '5':
+            filter_data_by_zip()
+        elif choice == '6':
+            filter_data_by_bausperre()
+        elif choice == '7':
+            filter_data_by_price()
+        elif choice == '8':
             print("Programm wird beendet.")
             break
-        elif choice == '5':
-            filter_data_by_date()
-        elif choice == '6':
-            filter_data_by_zip()
         else:
-            print("Ungültige Eingabe. Bitte wählen Sie 1, 2, 3, 4 oder 5.")
+            print("Ungültige Eingabe. Bitte wählen Sie 1, 2, 3, 4, 5, oder 6.")
 
 if __name__ == '__main__':
     main()
