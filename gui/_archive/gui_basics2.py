@@ -1,5 +1,6 @@
 import pygame
-from pygame.locals import *
+import pygame_gui
+import os
 
 
 def draw_chart(surface):
@@ -22,21 +23,23 @@ def create_gui():
     pygame.init()
 
     # Bildschirm erstellen
-    screen_size = (800, 600)
-    screen = pygame.display.set_mode(screen_size)
+    info = pygame.display.Info()  # Informationen über den Bildschirm erhalten
+    screen_size = (info.current_w * 0.9, info.current_h * 0.9)  # Bildschirmgröße verwenden
+    screen = pygame.display.set_mode(screen_size, pygame.RESIZABLE)  # RESIZABLE macht das Fenster anpassbar
     pygame.display.set_caption("Einfache GUI")
+    manager = pygame_gui.UIManager(screen_size)
 
     # Clock-Objekt für die Framerate-Steuerung
     clock = pygame.time.Clock()
 
     # Metabar-Konfiguration
-    metabar_height = 50
+    metabar_height = int(screen_size[1] * 0.08)  # Höhe der Metabar als Prozentsatz der Bildschirmhöhe
     metabar_bg_color = (0, 0, 0)
-    metabar_logo = pygame.image.load("REMonitor_Logo.png")
-    metabar_logo = pygame.transform.scale(metabar_logo, (200, metabar_height))
+    metabar_logo = pygame.image.load("../REMonitor_Logo.png")
+    metabar_logo = pygame.transform.scale(metabar_logo, (int(screen_size[0] * 0.15), metabar_height))
 
     # Navigationsbereich-Konfiguration
-    navigation_width = 200
+    navigation_width = int(screen_size[0] * 0.15)
     navigation_bg_color = (0, 0, 0)
 
     # Hauptfenster-Konfiguration
@@ -45,20 +48,32 @@ def create_gui():
     main_bg_color = (255, 255, 255)
 
     # Filterbereich-Konfiguration
-    filter_width = 200
-    filter_height = main_height - 50
+    filter_width = int(screen_size[0] * 0.2)
+    filter_height = main_height - int(metabar_height * 0.5)
     filter_bg_color = (255, 255, 255)
 
-    # Liste der Filterpunkte
-    filter_labels = ["Region", "Preisart", "Filter", "Zeitraum"]
-    dropdown_height = 40
-    dropdown_font = pygame.font.Font(None, 24)
+    # DropDown-Menü für "Bezirk" hinzufügen
+    manager = pygame_gui.UIManager(screen.get_size())
+    dropdown_bezirk_rect = pygame.Rect(navigation_width + 30, metabar_height + 30, filter_width - 40, 40)
+    dropdown_bezirk_menu = pygame_gui.elements.UIDropDownMenu(['Bezirk auswählen', '1. Bezirk', '2. Bezirk', '3. Bezirk'],
+                                                       'Bezirk auswählen', dropdown_bezirk_rect, manager)
+
+    # DropDown-Menüs für "Preis" hinzufügen
+    dropdown_preis_rect = pygame.Rect(navigation_width + 30, metabar_height + 90, filter_width - 40, 40)
+    dropdown_preis_menu = pygame_gui.elements.UIDropDownMenu(['Preis auswählen', 'absolut', 'relativ'],
+                                                             'Preis auswählen', dropdown_preis_rect, manager)
+
+    # DropDown-Menüs für "Filter" hinzufügen
+    dropdown_filter_rect = pygame.Rect(navigation_width + 30, metabar_height + 150, filter_width - 40, 40)
+    dropdown_filter_menu = pygame_gui.elements.UIDropDownMenu(['Filter auswählen', 'Widmung', 'Bauklasse'],
+                                                              'Filter auswählen', dropdown_filter_rect, manager)
 
     running = True
     while running:
         for event in pygame.event.get():
-            if event.type == QUIT:
+            if event.type == pygame.QUIT:
                 running = False
+            manager.process_events(event)
 
         # Bildschirm zeichnen
         screen.fill((255, 255, 255))  # Weißer Hintergrund für das Hauptfenster
@@ -85,27 +100,13 @@ def create_gui():
         pygame.draw.rect(screen, filter_bg_color,
                          (navigation_width + 25, metabar_height + 25, filter_width, filter_height))
 
-        # Filterpunkte im Filterbereich zeichnen
-        for i, label in enumerate(filter_labels):
-            dropdown_rect = pygame.Rect(navigation_width + 30, metabar_height + 30 + i * (dropdown_height + 10),
-                                        filter_width - 40, dropdown_height)
-
-            # Zeichne den hellgrauen Hintergrund für jeden Filterpunkt
-            pygame.draw.rect(screen, (200, 200, 200), dropdown_rect)
-
-            # Zeichne den Rahmen für jeden Filterpunkt
-            pygame.draw.rect(screen, (0, 0, 0), dropdown_rect, 2)
-
-            text = dropdown_font.render(label, True, (0, 0, 0))
-            text_rect = text.get_rect(center=dropdown_rect.center)
-            screen.blit(text, text_rect)
-
         # Liniendiagramm zeichnen
-        chart_surface = pygame.Surface((main_width - 200, main_height - 50))
+        chart_surface = pygame.Surface((main_width - filter_width - 50, main_height - 50))
         draw_chart(chart_surface)
-        screen.blit(chart_surface, (navigation_width + 200, metabar_height))
+        screen.blit(chart_surface, (navigation_width + filter_width + 50, metabar_height))
 
-
+        manager.update(clock.tick(30) / 1000.0)
+        manager.draw_ui(screen)
 
         # Aktualisiere den Bildschirm
         pygame.display.flip()
