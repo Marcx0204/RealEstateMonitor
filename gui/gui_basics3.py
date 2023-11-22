@@ -160,8 +160,8 @@ def create_gui():
 
             # DropDown-Menüs für "Filter" hinzufügen
             dropdown_filter_rect = pygame.Rect(navigation_width + 30, metabar_height + 150, filter_width - 40, 40)
-            dropdown_filter_menu = pygame_gui.elements.UIDropDownMenu(['Filter auswählen', 'Widmung', 'Bauklasse'],
-                                                                      'Filter auswählen', dropdown_filter_rect, manager)
+            dropdown_filter_menu = pygame_gui.elements.UIDropDownMenu(['Zuordnung auswählen', 'Ein-, Zweifamilienhaus', 'Betriebsobjekt', 'Kleingarten'],
+                                                                      'Zuordnung auswählen', dropdown_filter_rect, manager)
             draw_line_chart(chart_surface)
             screen.blit(chart_surface, (navigation_width + filter_width + 50, metabar_height))
 
