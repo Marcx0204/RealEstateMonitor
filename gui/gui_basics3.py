@@ -40,6 +40,12 @@ def draw_bar_chart(surface):
 
         pygame.draw.rect(surface, (0, 0, 0), (bar_x, bar_y, bar_width, bar_height))
 
+def hide_dropdown_menus(menus):
+    for menu in menus:
+        if menu:
+            menu.disable()
+            menu.hide()
+
 def create_gui():
 
     #********** BASIS CODE ****************
@@ -99,6 +105,15 @@ def create_gui():
         manager=manager
     )
 
+    # Initialisierung des Dropdown-Menüs für "Bezirk" außerhalb der Haupt-Schleife
+    bezirke_liste = ['Bezirk auswählen'] + [f'{i}. Bezirk' for i in range(1, 24)]
+    selected_bezirk = 'Bezirk auswählen'
+    dropdown_bezirk_menu = None
+    dropdown_preis_menu = None
+    dropdown_filter_menu = None
+
+
+
     while running:
         for event in pygame.event.get():
             if event.type == pygame.QUIT:
@@ -109,13 +124,64 @@ def create_gui():
                 if event.user_type == pygame_gui.UI_BUTTON_PRESSED:
                     if event.ui_element == stadtplan_button:
                         current_view = "Stadtplan"
+                        hide_dropdown_menus([dropdown_preis_menu, dropdown_filter_menu, dropdown_bezirk_menu])
                         print("Wechsel zur Stadtplan-Ansicht")
+                        dropdown_bezirk_rect = pygame.Rect(navigation_width + 30, metabar_height + 30,
+                                                           filter_width - 40, 40)
+                        dropdown_bezirk_menu = pygame_gui.elements.UIDropDownMenu(
+                            bezirke_liste, selected_bezirk, dropdown_bezirk_rect, manager)
+
+                        # DropDown-Menüs für "Preis" hinzufügen
+                        dropdown_preis_rect = pygame.Rect(navigation_width + 30, metabar_height + 90, filter_width - 40,
+                                                          40)
+                        dropdown_preis_menu = pygame_gui.elements.UIDropDownMenu(
+                            ['Preis auswählen', 'absolut', 'relativ'],
+                            'Preis auswählen', dropdown_preis_rect, manager)
+
+                        # DropDown-Menüs für "Filter" hinzufügen
+                        dropdown_filter_rect = pygame.Rect(navigation_width + 30, metabar_height + 150,
+                                                           filter_width - 40, 40)
+                        dropdown_filter_menu = pygame_gui.elements.UIDropDownMenu(
+                            ['Zuordnung auswählen', 'Ein-, Zweifamilienhaus', 'Betriebsobjekt', 'Kleingarten'],
+                            'Zuordnung auswählen', dropdown_filter_rect, manager)
                     elif event.ui_element == preisvergleich_button:
                         current_view = "Preisvergleich"
+                        hide_dropdown_menus([dropdown_preis_menu, dropdown_filter_menu, dropdown_bezirk_menu])
                         print("Wechsel zur Preisvergleich-Ansicht")
+                        dropdown_bezirk_rect = pygame.Rect(navigation_width + 30, metabar_height + 30,
+                                                           filter_width - 40, 40)
+                        dropdown_bezirk_menu = pygame_gui.elements.UIDropDownMenu(
+                            bezirke_liste, selected_bezirk, dropdown_bezirk_rect, manager)
+
+                        # DropDown-Menüs für "Preis" hinzufügen
+                        dropdown_preis_rect = pygame.Rect(navigation_width + 30, metabar_height + 90, filter_width - 40,
+                                                          40)
+                        dropdown_preis_menu = pygame_gui.elements.UIDropDownMenu(
+                            ['Preis auswählen', 'absolut', 'relativ'],
+                            'Preis auswählen', dropdown_preis_rect, manager)
+
+                        # DropDown-Menüs für "Filter" hinzufügen
+                        dropdown_filter_rect = pygame.Rect(navigation_width + 30, metabar_height + 150,
+                                                           filter_width - 40, 40)
+                        dropdown_filter_menu = pygame_gui.elements.UIDropDownMenu(
+                            ['Zuordnung auswählen', 'Ein-, Zweifamilienhaus', 'Betriebsobjekt', 'Kleingarten'],
+                            'Zuordnung auswählen', dropdown_filter_rect, manager)
                     elif event.ui_element == regionsanalyse_button:
                         current_view = "Regionsanalyse"
+                        hide_dropdown_menus([dropdown_preis_menu, dropdown_filter_menu, dropdown_bezirk_menu])
                         print("Wechsel zur Regionsanalyse-Ansicht")
+
+                        dropdown_bezirk_rect = pygame.Rect(navigation_width + 30, metabar_height + 30,
+                                                           filter_width - 40, 40)
+                        dropdown_bezirk_menu = pygame_gui.elements.UIDropDownMenu(
+                            bezirke_liste, selected_bezirk, dropdown_bezirk_rect, manager)
+
+                        # DropDown-Menüs für "Filter" hinzufügen
+                        dropdown_filter_rect = pygame.Rect(navigation_width + 30, metabar_height + 150,
+                                                           filter_width - 40, 40)
+                        dropdown_filter_menu = pygame_gui.elements.UIDropDownMenu(
+                            ['Zuordnung auswählen', 'Ein-, Zweifamilienhaus', 'Betriebsobjekt', 'Kleingarten'],
+                            'Zuordnung auswählen', dropdown_filter_rect, manager)
 
             manager.process_events(event)
 
@@ -141,52 +207,16 @@ def create_gui():
 
         # ********** CODE JE NACH MENÜPUNKT ****************
 
+
         if current_view == "Stadtplan":
-            # Code für die Stadtplan-Ansicht
+
             pass
 
         elif current_view == "Preisvergleich":
 
-            # DropDown-Menü für "Bezirk" hinzufügen
-            dropdown_bezirk_rect = pygame.Rect(navigation_width + 30, metabar_height + 30, filter_width - 40, 40)
-            dropdown_bezirk_menu = pygame_gui.elements.UIDropDownMenu(
-                ['Bezirk auswählen', '1. Bezirk', '2. Bezirk', '3. Bezirk'],
-                'Bezirk auswählen', dropdown_bezirk_rect, manager)
-
-            # DropDown-Menüs für "Preis" hinzufügen
-            dropdown_preis_rect = pygame.Rect(navigation_width + 30, metabar_height + 90, filter_width - 40, 40)
-            dropdown_preis_menu = pygame_gui.elements.UIDropDownMenu(['Preis auswählen', 'absolut', 'relativ'],
-                                                                     'Preis auswählen', dropdown_preis_rect, manager)
-
-            # DropDown-Menüs für "Filter" hinzufügen
-            dropdown_filter_rect = pygame.Rect(navigation_width + 30, metabar_height + 150, filter_width - 40, 40)
-            dropdown_filter_menu = pygame_gui.elements.UIDropDownMenu(['Zuordnung auswählen', 'Ein-, Zweifamilienhaus', 'Betriebsobjekt', 'Kleingarten'],
-                                                                      'Zuordnung auswählen', dropdown_filter_rect, manager)
-            draw_line_chart(chart_surface)
-            screen.blit(chart_surface, (navigation_width + filter_width + 50, metabar_height))
-
             pass
 
         elif current_view == "Regionsanalyse":
-
-            # DropDown-Menü für "Bezirk" hinzufügen
-            dropdown_bezirk_rect = pygame.Rect(navigation_width + 30, metabar_height + 30, filter_width - 40, 40)
-            dropdown_bezirk_menu = pygame_gui.elements.UIDropDownMenu(
-                ['Bezirk auswählen', '1. Bezirk', '2. Bezirk', '3. Bezirk'],
-                'Bezirk auswählen', dropdown_bezirk_rect, manager)
-
-            # DropDown-Menüs für "Zeitraum" hinzufügen
-            dropdown_zeit_rect = pygame.Rect(navigation_width + 30, metabar_height + 90, filter_width - 40, 40)
-            dropdown_zeit_menu = pygame_gui.elements.UIDropDownMenu(['Zeitraum auswählen', '2023', '2022', '2021', '2020'],
-                                                                     'Preis auswählen', dropdown_zeit_rect, manager)
-
-            # DropDown-Menüs für "Filter" hinzufügen
-            dropdown_filter_rect = pygame.Rect(navigation_width + 30, metabar_height + 150, filter_width - 40, 40)
-            dropdown_filter_menu = pygame_gui.elements.UIDropDownMenu(['Filter auswählen', 'Widmung', 'Bauklasse'],
-                                                                      'Filter auswählen', dropdown_filter_rect, manager)
-            # Code für das Balkendiagramm der Regionsanalyse
-            draw_bar_chart(chart_surface)
-            screen.blit(chart_surface, (navigation_width + filter_width + 50, metabar_height))
 
             pass
 
