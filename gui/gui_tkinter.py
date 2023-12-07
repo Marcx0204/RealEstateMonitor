@@ -65,6 +65,7 @@ class GUIApp:
         # Create dropdowns for each view
         self.create_dropdowns()
 
+
         # Style configuration for buttons and combobox
         style = ttk.Style()
         style.configure("TButton", background="#3498db", font=("Helvetica", 12), borderwidth=5,
