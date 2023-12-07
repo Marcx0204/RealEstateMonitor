@@ -104,6 +104,7 @@ class GUIApp:
         # Update chart_frame content based on the selected view
         if view == "Stadtplan":
             tk.Label(self.chart_frame, text="Stadtplan Content", font=("Helvetica", 16)).pack(pady=20)
+            self.update_dropdown_text('Filter auswählen')  # Reset the dropdown text for other views
 
         elif view == "Preisvergleich":
             # Draw line chart for Preisvergleich
@@ -113,6 +114,7 @@ class GUIApp:
         elif view == "Regionsanalyse":
             # Draw bar chart for Regionsanalyse
             self.draw_bar_chart()
+            self.update_dropdown_text('Filter auswählen')  # Reset the dropdown text for other views
 
     def draw_line_chart(self):
         # Example data for a line chart
