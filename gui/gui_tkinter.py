@@ -126,9 +126,9 @@ class GUIApp:
                 (48.24623, 16.41543)
             ]
 
-            # Set a polygon for the 22nd district
-            district_22 = map_widget.set_polygon(district_22_polygon, fill_color="green", command=self.polygon_click,
-                                                 name="district_22_polygon")
+            # Set a polygon for the 22nd district with a dynamic fill color (e.g., "green")
+            district_22 = map_widget.set_polygon(district_22_polygon, fill_color=self.get_district_fill_color("22"),
+                                                 command=self.polygon_click, name="district_22_polygon")
 
         elif view == "Preisvergleich":
             # Draw line chart for Preisvergleich
@@ -139,6 +139,20 @@ class GUIApp:
             # Draw bar chart for Regionsanalyse
             self.draw_bar_chart()
             self.update_dropdown_text('Filter auswählen')  # Reset the dropdown text for other views
+
+    def polygon_click(self, polygon):
+        print(f"Polygon clicked - text: {polygon.name}")
+
+    def get_district_fill_color(self, district_number):
+        # Add your logic here to determine the fill color based on the district number
+        # For example, you can use a dictionary to map district numbers to colors
+        district_color_mapping = {
+            "22": "green",
+            # Add more entries as needed
+        }
+
+        # Return the fill color for the given district number, defaulting to a color if not found in the mapping
+        return district_color_mapping.get(district_number, "blue")
 
     def draw_line_chart(self):
         # Example data for a line chart
