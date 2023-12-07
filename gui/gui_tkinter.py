@@ -2,6 +2,7 @@ import tkinter as tk
 from tkinter import ttk
 import matplotlib.pyplot as plt
 from matplotlib.backends.backend_tkagg import FigureCanvasTkAgg
+import tkintermapview
 
 class GUIApp:
     def __init__(self, root):
@@ -11,7 +12,7 @@ class GUIApp:
         # Configure main window size
         screen_width = root.winfo_screenwidth() * 0.9
         screen_height = root.winfo_screenheight() * 0.9
-        root.geometry("1100x650")
+        root.geometry("1300x850")
 
         # Metabar
         metabar_height = int(screen_height * 0.08)
@@ -103,8 +104,30 @@ class GUIApp:
 
         # Update chart_frame content based on the selected view
         if view == "Stadtplan":
-            tk.Label(self.chart_frame, text="Stadtplan Content", font=("Helvetica", 16)).pack(pady=20)
-            self.update_dropdown_text('Filter auswählen')  # Reset the dropdown text for other views
+            # Embed the map view in the Tkinter window
+            map_widget = tkintermapview.TkinterMapView(self.chart_frame, width=800, height=600, corner_radius=0)
+            map_widget.pack(fill="both", expand=True)
+
+            # Set Wien tile server
+            map_widget.set_tile_server(
+                "https://maps.wien.gv.at/basemap/geolandbasemap/normal/google3857/{z}/{y}/{x}.png", max_zoom=22)
+
+            # Set current position and zoom to Wien
+            map_widget.set_position(48.2082, 16.3738, marker=False)  # Vienna, Austria
+            map_widget.set_zoom(12)
+
+            # Coordinates for an approximate outline of the 22nd district of Vienna (PLZ 1220)
+            district_22_polygon = [
+                (48.22663, 16.37513),
+                (48.23053, 16.40023),
+                (48.24523, 16.41293),
+                (48.24623, 16.41413),
+                (48.24623, 16.41543)
+            ]
+
+            # Set a polygon for the 22nd district
+            district_22 = map_widget.set_polygon(district_22_polygon, fill_color="green", command=self.polygon_click,
+                                                 name="district_22_polygon")
 
         elif view == "Preisvergleich":
             # Draw line chart for Preisvergleich
