@@ -1,5 +1,7 @@
 import tkinter as tk
 from tkinter import ttk
+import matplotlib.pyplot as plt
+from matplotlib.backends.backend_tkagg import FigureCanvasTkAgg
 
 class GUIApp:
     def __init__(self, root):
@@ -9,12 +11,12 @@ class GUIApp:
         # Configure main window size
         screen_width = root.winfo_screenwidth() * 0.9
         screen_height = root.winfo_screenheight() * 0.9
-        root.geometry(f"{int(screen_width)}x{int(screen_height)}")
+        root.geometry("1100x650")
 
         # Metabar
         metabar_height = int(screen_height * 0.08)
         metabar_frame = tk.Frame(root, height=metabar_height, bg="#333333")  # Dark gray background
-        metabar_frame.pack(fill="x")
+        metabar_frame.grid(row=0, column=0, columnspan=3, sticky="ew")
 
         # Add logo to the left corner of the metabar with dynamic width
         logo_image = tk.PhotoImage(file="REMonitor_Logo.png").subsample(3,
@@ -26,19 +28,24 @@ class GUIApp:
         # Navigationsbereich
         navigation_width = int(screen_width * 0.25)
         navigation_frame = tk.Frame(root, width=navigation_width, bg="#222222", bd=2, relief=tk.RAISED)  # Dark background with border
-        navigation_frame.pack(side="left", fill="y")
+        navigation_frame.grid(row=1, column=0, sticky="ns")
+        self.root.grid_columnconfigure(0, weight=0)  # Column 0 won't expand
 
         # Filterbereich
         self.filter_width = int(screen_width * 0.2)
         filter_height = main_height = screen_height - metabar_height
         self.filter_frame = tk.Frame(root, width=self.filter_width, height=filter_height, bg="#ffffff", bd=2, relief=tk.RAISED)  # White background with border
-        self.filter_frame.pack(side="left", fill="both", padx=25, pady=25)
+        self.filter_frame.grid(row=1, column=1, sticky="nsew")
+        self.root.grid_columnconfigure(1, weight=0)  # Column 1 won't expand
+        self.root.grid_rowconfigure(1, weight=1)  # Row 1 will expand vertically
 
         # Diagrammbereich
         chart_width = screen_width - navigation_width - self.filter_width - 50  # Adjust this value to make it wider
         chart_height = main_height - 100
         self.chart_frame = tk.Frame(root, bg="#ffffff", width=chart_width, height=chart_height, bd=2, relief=tk.RAISED)  # White background with border
-        self.chart_frame.pack(side="left", fill="both", padx=25, pady=50)
+        self.chart_frame.grid(row=1, column=2, sticky="nsew")
+        self.root.grid_columnconfigure(2, weight=1)  # Column 2 will expand horizontally
+        self.root.grid_rowconfigure(1, weight=1)  # Row 1 will expand vertically
 
         # Create buttons for Stadtplan, Preisvergleich, and Regionsanalyse
         stadtplan_button = ttk.Button(navigation_frame, text="Stadtplan", command=lambda: self.show_chart("Stadtplan"),
@@ -96,28 +103,68 @@ class GUIApp:
         # Update chart_frame content based on the selected view
         if view == "Stadtplan":
             tk.Label(self.chart_frame, text="Stadtplan Content", font=("Helvetica", 16)).pack(pady=20)
-            self.update_dropdown_text('Filter auswählen')  # Reset the dropdown text for other views
 
         elif view == "Preisvergleich":
-            tk.Label(self.chart_frame, text="Preisvergleich Content", font=("Helvetica", 16)).pack(pady=20)
-            self.update_dropdown_text('Zuordnung auswählen')  # Change the dropdown text for Preisvergleich
+            # Draw line chart for Preisvergleich
+            self.draw_line_chart()
+            self.update_dropdown_text('Zuordnung auswählen')  # Reset the dropdown text for other views
 
         elif view == "Regionsanalyse":
-            tk.Label(self.chart_frame, text="Regionsanalyse Content", font=("Helvetica", 16)).pack(pady=20)
-            self.update_dropdown_text('Filter auswählen')  # Reset the dropdown text for other views
+            # Draw bar chart for Regionsanalyse
+            self.draw_bar_chart()
+
+    def draw_line_chart(self):
+        # Example data for a line chart
+        x_values = [1, 2, 3, 4, 5]
+        y_values = [10, 15, 7, 12, 9]
+
+        # Create a figure and axis
+        fig, ax = plt.subplots()
+
+        # Plot the line chart
+        ax.plot(x_values, y_values, label='Line Chart')
+
+        # Set labels and title
+        ax.set_xlabel('X-axis')
+        ax.set_ylabel('Y-axis')
+        ax.set_title('Line Chart Example')
+
+        # Add a legend
+        ax.legend()
+
+        # Embed the chart in the Tkinter window
+        canvas = FigureCanvasTkAgg(fig, master=self.chart_frame)
+        canvas.draw()
+        canvas.get_tk_widget().pack()
+
+    def draw_bar_chart(self):
+        # Example data for a bar chart
+        categories = ['Category A', 'Category B', 'Category C', 'Category D', 'Category E']
+        values = [15, 24, 10, 30, 18]
+
+        # Create a figure and axis
+        fig, ax = plt.subplots()
+
+        # Plot the bar chart
+        ax.bar(categories, values, label='Bar Chart')
+
+        # Set labels and title
+        ax.set_xlabel('Categories')
+        ax.set_ylabel('Values')
+        ax.set_title('Bar Chart Example')
+
+        # Add a legend
+        ax.legend()
+
+        # Embed the chart in the Tkinter window
+        canvas = FigureCanvasTkAgg(fig, master=self.chart_frame)
+        canvas.draw()
+        canvas.get_tk_widget().pack()
 
     def update_dropdown_text(self, text):
         # Update the text of the filter_dropdown
         self.filter_dropdown['values'] = ['Ein-, Zweifamilienhaus', 'Betriebsobjekt', 'Kleingarten']
         self.filter_dropdown.set(text)  # Set the initial value
-
-    def draw_line_chart(self):
-        # Your implementation for drawing line chart
-        pass
-
-    def draw_bar_chart(self):
-        # Your implementation for drawing bar chart
-        pass
 
 if __name__ == "__main__":
     root = tk.Tk()
