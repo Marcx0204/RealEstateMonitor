@@ -104,6 +104,7 @@ class GUIApp:
 
         # Update chart_frame content based on the selected view
         if view == "Stadtplan":
+            self.update_dropdown_text('Filter auswählen')  # Reset the dropdown text for other views
             # Embed the map view in the Tkinter window
             map_widget = tkintermapview.TkinterMapView(self.chart_frame, width=800, height=600, corner_radius=0)
             map_widget.pack(fill="both", expand=True)
