@@ -97,6 +97,36 @@ class GUIApp:
         self.filter_dropdown.set('Filter auswählen')  # Set the initial value
         self.filter_dropdown.grid(row=2, pady=10, padx=10, sticky="w")
 
+        # Dropdowns für "Von: Monat und Jahr"
+        von_label = tk.Label(self.filter_frame, text="Von:", font=dropdown_font)
+        von_label.grid(row=3, pady=10, padx=10, sticky="w")
+
+        von_month_dropdown = ttk.Combobox(self.filter_frame, values=['Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun',
+                                                                     'Jul', 'Aug', 'Sep', 'Oct', 'Nov', 'Dec'],
+                                          style="TCombobox", font=dropdown_font)
+        von_month_dropdown.set('Monat auswählen')
+        von_month_dropdown.grid(row=4, pady=10, padx=10, sticky="w")
+
+        von_year_dropdown = ttk.Combobox(self.filter_frame, values=list(range(1999, 2023)),
+                                         style="TCombobox", font=dropdown_font)
+        von_year_dropdown.set('Jahr auswählen')
+        von_year_dropdown.grid(row=5, pady=10, padx=10, sticky="w")
+
+        # Dropdowns für "Bis: Monat und Jahr"
+        bis_label = tk.Label(self.filter_frame, text="Bis:", font=dropdown_font)
+        bis_label.grid(row=6, pady=10, padx=10, sticky="w")
+
+        bis_month_dropdown = ttk.Combobox(self.filter_frame, values=['Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun',
+                                                                     'Jul', 'Aug', 'Sep', 'Oct', 'Nov', 'Dec'],
+                                          style="TCombobox", font=dropdown_font)
+        bis_month_dropdown.set('Monat auswählen')
+        bis_month_dropdown.grid(row=7, pady=10, padx=10, sticky="w")
+
+        bis_year_dropdown = ttk.Combobox(self.filter_frame, values=list(range(1999, 2023)),
+                                         style="TCombobox", font=dropdown_font)
+        bis_year_dropdown.set('Jahr auswählen')
+        bis_year_dropdown.grid(row=8, pady=10, padx=10, sticky="w")
+
     def show_chart(self, view):
         # Clear existing content in chart_frame
         for widget in self.chart_frame.winfo_children():
