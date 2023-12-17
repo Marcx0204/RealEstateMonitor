@@ -20,8 +20,8 @@ class GUIApp:
         metabar_frame.grid(row=0, column=0, columnspan=3, sticky="ew")
 
         # Add logo to the left corner of the metabar with dynamic width
-        logo_image = tk.PhotoImage(file="REMonitor_Logo.png").subsample(3,
-                                                                           3)  # Replace with the path to your logo image
+        logo_image = tk.PhotoImage(file="REMonitor_Logo.png").subsample(5,
+                                                                           5)  # Replace with the path to your logo image
         logo_label = tk.Label(metabar_frame, image=logo_image, bg="#2c3e50")  # Darker color
         logo_label.image = logo_image
         logo_label.pack(side="left", padx=10, pady=10, anchor="w")
@@ -49,23 +49,22 @@ class GUIApp:
         self.root.grid_rowconfigure(1, weight=1)  # Row 1 will expand vertically
 
         # Create buttons for Stadtplan, Preisvergleich, and Regionsanalyse
-        stadtplan_button = ttk.Button(navigation_frame, text="Stadtplan", command=lambda: self.show_chart("Stadtplan"),
+        stadtplan_button = ttk.Button(navigation_frame, text="Stadtplan", command=lambda: self.create_content("Stadtplan"),
                                       style="TButton")  # Added style
         stadtplan_button.pack(pady=10)
 
         preisvergleich_button = ttk.Button(navigation_frame, text="Preisvergleich",
-                                           command=lambda: self.show_chart("Preisvergleich"),
+                                           command=lambda: self.create_content("Preisvergleich"),
                                            style="TButton")  # Added style
         preisvergleich_button.pack(pady=10)
 
         regionsanalyse_button = ttk.Button(navigation_frame, text="Regionsanalyse",
-                                           command=lambda: self.show_chart("Regionsanalyse"),
+                                           command=lambda: self.create_content("Regionsanalyse"),
                                            style="TButton")  # Added style
         regionsanalyse_button.pack(pady=10)
 
         # Create dropdowns for each view
-        self.create_dropdowns()
-
+        self.create_content(view="Stadtplan")
 
         # Style configuration for buttons and combobox
         style = ttk.Style()
@@ -74,58 +73,159 @@ class GUIApp:
         style.configure("TCombobox", background="#ecf0f1", fieldbackground="#ecf0f1",
                         font=("Helvetica", 12))  # Light gray combobox
 
-    def create_dropdowns(self):
-        # Define a custom font for the dropdowns
+    def create_content(self, view):
+        self.create_dropdowns(view)
+        self.show_chart(view)
+
+    def create_dropdowns(self, view="Stadtplan"):
+
         dropdown_font = ("Helvetica", 12)
+        for widget in self.filter_frame.winfo_children():
+            widget.grid_forget()  # Hide all dropdowns initially
 
-        # DropDown-Menüs für "Bezirk" hinzufügen
-        self.bezirk_dropdown = ttk.Combobox(self.filter_frame, values=['1. Bezirk', '2. Bezirk', '3. Bezirk'],
-                                            style="TCombobox", font=dropdown_font)
-        self.bezirk_dropdown.set('Bezirk auswählen')  # Set the initial value
-        self.bezirk_dropdown.grid(row=0, pady=(10, 0), padx=10, sticky="w")  # Adjusted padding
+        if view == "Stadtplan":
+        # Preis, Zuordnung, Zeitraum
 
-        # DropDown-Menüs für "Preis" hinzufügen
-        self.preis_dropdown = ttk.Combobox(self.filter_frame, values=['absolut', 'relativ'], style="TCombobox",
-                                           font=dropdown_font)
-        self.preis_dropdown.set('Preis auswählen')  # Set the initial value
-        self.preis_dropdown.grid(row=1, pady=10, padx=10, sticky="w")
+            # Preis
+            self.preis_dropdown = ttk.Combobox(self.filter_frame, values=['absolut', 'relativ'], style="TCombobox", font=dropdown_font)
+            self.preis_dropdown.set('Preis auswählen')
+            self.preis_dropdown.grid(row=0, pady=10, padx=10, sticky="w")
 
-        # DropDown-Menüs für "Filter" hinzufügen
-        self.filter_dropdown = ttk.Combobox(self.filter_frame,
-                                            values=['Ein-, Zweifamilienhaus', 'Betriebsobjekt', 'Kleingarten'],
-                                            style="TCombobox", font=dropdown_font)
-        self.filter_dropdown.set('Filter auswählen')  # Set the initial value
-        self.filter_dropdown.grid(row=2, pady=10, padx=10, sticky="w")
+            # Zuordnung
+            self.zuordnung_dropdown = ttk.Combobox(self.filter_frame, values=['Abbruchprojekt', 'Villa', 'unbebaut', 'etc.'], style="TCombobox", font=dropdown_font)
+            self.zuordnung_dropdown.set('Zuordnung auswählen')
+            self.zuordnung_dropdown.grid(row=1, pady=10, padx=10, sticky="w")
 
-        # Dropdowns für "Von: Monat und Jahr"
-        von_label = tk.Label(self.filter_frame, text="Von:", font=dropdown_font)
-        von_label.grid(row=3, pady=10, padx=10, sticky="w")
+            # Zeitraum
+            # Dropdowns für "Von: Monat und Jahr"
+            von_label = tk.Label(self.filter_frame, text="Von:", font=dropdown_font)
+            von_label.grid(row=2, pady=5, padx=10, sticky="w")
 
-        von_month_dropdown = ttk.Combobox(self.filter_frame, values=['Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun',
-                                                                     'Jul', 'Aug', 'Sep', 'Oct', 'Nov', 'Dec'],
-                                          style="TCombobox", font=dropdown_font)
-        von_month_dropdown.set('Monat auswählen')
-        von_month_dropdown.grid(row=4, pady=10, padx=10, sticky="w")
+            von_month_dropdown = ttk.Combobox(self.filter_frame, values=['Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun',
+                                                                         'Jul', 'Aug', 'Sep', 'Oct', 'Nov', 'Dec'],
+                                              style="TCombobox", font=dropdown_font)
+            von_month_dropdown.set('Monat auswählen')
+            von_month_dropdown.grid(row=3, pady=5, padx=10, sticky="w")
 
-        von_year_dropdown = ttk.Combobox(self.filter_frame, values=list(range(1999, 2023)),
-                                         style="TCombobox", font=dropdown_font)
-        von_year_dropdown.set('Jahr auswählen')
-        von_year_dropdown.grid(row=5, pady=10, padx=10, sticky="w")
+            von_year_dropdown = ttk.Combobox(self.filter_frame, values=list(range(1999, 2023)),
+                                             style="TCombobox", font=dropdown_font)
+            von_year_dropdown.set('Jahr auswählen')
+            von_year_dropdown.grid(row=4, pady=5, padx=10, sticky="w")
 
-        # Dropdowns für "Bis: Monat und Jahr"
-        bis_label = tk.Label(self.filter_frame, text="Bis:", font=dropdown_font)
-        bis_label.grid(row=6, pady=10, padx=10, sticky="w")
+            # Dropdowns für "Bis: Monat und Jahr"
+            bis_label = tk.Label(self.filter_frame, text="Bis:", font=dropdown_font)
+            bis_label.grid(row=5, pady=5, padx=10, sticky="w")
 
-        bis_month_dropdown = ttk.Combobox(self.filter_frame, values=['Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun',
-                                                                     'Jul', 'Aug', 'Sep', 'Oct', 'Nov', 'Dec'],
-                                          style="TCombobox", font=dropdown_font)
-        bis_month_dropdown.set('Monat auswählen')
-        bis_month_dropdown.grid(row=7, pady=10, padx=10, sticky="w")
+            bis_month_dropdown = ttk.Combobox(self.filter_frame, values=['Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun',
+                                                                         'Jul', 'Aug', 'Sep', 'Oct', 'Nov', 'Dec'],
+                                              style="TCombobox", font=dropdown_font)
+            bis_month_dropdown.set('Monat auswählen')
+            bis_month_dropdown.grid(row=6, pady=5, padx=10, sticky="w")
 
-        bis_year_dropdown = ttk.Combobox(self.filter_frame, values=list(range(1999, 2023)),
-                                         style="TCombobox", font=dropdown_font)
-        bis_year_dropdown.set('Jahr auswählen')
-        bis_year_dropdown.grid(row=8, pady=10, padx=10, sticky="w")
+            bis_year_dropdown = ttk.Combobox(self.filter_frame, values=list(range(1999, 2023)),
+                                             style="TCombobox", font=dropdown_font)
+            bis_year_dropdown.set('Jahr auswählen')
+            bis_year_dropdown.grid(row=7, pady=10, padx=10, sticky="w")
+
+        elif view == "Preisvergleich":
+        # Preis, Bezirk, Zuordnung, Zeitraum
+
+            # Preis
+            self.preis_dropdown = ttk.Combobox(self.filter_frame, values=['absolut', 'relativ'], style="TCombobox",
+                                               font=dropdown_font)
+            self.preis_dropdown.set('Preis auswählen')
+            self.preis_dropdown.grid(row=0, pady=10, padx=10, sticky="w")
+
+            # Bezirk
+            self.bezirk_dropdown = ttk.Combobox(self.filter_frame, values=['1. Bezirk', '2. Bezirk', '3. Bezirk'],
+                                                style="TCombobox", font=dropdown_font)
+            self.bezirk_dropdown.set('Bezirk auswählen')
+            self.bezirk_dropdown.grid(row=1, pady=10, padx=10, sticky="w")
+
+            # Zuordnung
+            self.zuordnung_dropdown = ttk.Combobox(self.filter_frame,
+                                                   values=['Abbruchprojekt', 'Villa', 'unbebaut', 'etc.'],
+                                                   style="TCombobox", font=dropdown_font)
+            self.zuordnung_dropdown.set('Zuordnung auswählen')
+            self.zuordnung_dropdown.grid(row=2, pady=10, padx=10, sticky="w")
+
+            # Zeitraum
+            # Dropdowns für "Von: Monat und Jahr"
+            von_label = tk.Label(self.filter_frame, text="Von:", font=dropdown_font)
+            von_label.grid(row=3, pady=5, padx=10, sticky="w")
+
+            von_month_dropdown = ttk.Combobox(self.filter_frame, values=['Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun',
+                                                                         'Jul', 'Aug', 'Sep', 'Oct', 'Nov', 'Dec'],
+                                              style="TCombobox", font=dropdown_font)
+            von_month_dropdown.set('Monat auswählen')
+            von_month_dropdown.grid(row=4, pady=5, padx=10, sticky="w")
+
+            von_year_dropdown = ttk.Combobox(self.filter_frame, values=list(range(1999, 2023)),
+                                             style="TCombobox", font=dropdown_font)
+            von_year_dropdown.set('Jahr auswählen')
+            von_year_dropdown.grid(row=5, pady=5, padx=10, sticky="w")
+
+            # Dropdowns für "Bis: Monat und Jahr"
+            bis_label = tk.Label(self.filter_frame, text="Bis:", font=dropdown_font)
+            bis_label.grid(row=6, pady=5, padx=10, sticky="w")
+
+            bis_month_dropdown = ttk.Combobox(self.filter_frame, values=['Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun',
+                                                                         'Jul', 'Aug', 'Sep', 'Oct', 'Nov', 'Dec'],
+                                              style="TCombobox", font=dropdown_font)
+            bis_month_dropdown.set('Monat auswählen')
+            bis_month_dropdown.grid(row=7, pady=5, padx=10, sticky="w")
+
+            bis_year_dropdown = ttk.Combobox(self.filter_frame, values=list(range(1999, 2023)),
+                                             style="TCombobox", font=dropdown_font)
+            bis_year_dropdown.set('Jahr auswählen')
+            bis_year_dropdown.grid(row=8, pady=10, padx=10, sticky="w")
+
+        elif view == "Regionsanalyse":
+        # Bezirk, Filter, Zeitraum
+
+            # Bezirk
+            self.bezirk_dropdown = ttk.Combobox(self.filter_frame, values=['1. Bezirk', '2. Bezirk', '3. Bezirk'],
+                                                style="TCombobox", font=dropdown_font)
+            self.bezirk_dropdown.set('Bezirk auswählen')
+            self.bezirk_dropdown.grid(row=0, pady=(10, 0), padx=10, sticky="w")
+
+            # Filter
+            self.filter_dropdown = ttk.Combobox(self.filter_frame,
+                                                values=['Zuordnung', 'Erwerbsart', 'Bausperre'],
+                                                style="TCombobox", font=dropdown_font)
+            self.filter_dropdown.set('Filter auswählen')
+            self.filter_dropdown.grid(row=1, pady=10, padx=10, sticky="w")
+
+            # Zeitraum
+            # Dropdowns für "Von: Monat und Jahr"
+            von_label = tk.Label(self.filter_frame, text="Von:", font=dropdown_font)
+            von_label.grid(row=2, pady=5, padx=10, sticky="w")
+
+            von_month_dropdown = ttk.Combobox(self.filter_frame, values=['Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun',
+                                                                         'Jul', 'Aug', 'Sep', 'Oct', 'Nov', 'Dec'],
+                                              style="TCombobox", font=dropdown_font)
+            von_month_dropdown.set('Monat auswählen')
+            von_month_dropdown.grid(row=3, pady=5, padx=10, sticky="w")
+
+            von_year_dropdown = ttk.Combobox(self.filter_frame, values=list(range(1999, 2023)),
+                                             style="TCombobox", font=dropdown_font)
+            von_year_dropdown.set('Jahr auswählen')
+            von_year_dropdown.grid(row=4, pady=5, padx=10, sticky="w")
+
+            # Dropdowns für "Bis: Monat und Jahr"
+            bis_label = tk.Label(self.filter_frame, text="Bis:", font=dropdown_font)
+            bis_label.grid(row=5, pady=5, padx=10, sticky="w")
+
+            bis_month_dropdown = ttk.Combobox(self.filter_frame, values=['Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun',
+                                                                         'Jul', 'Aug', 'Sep', 'Oct', 'Nov', 'Dec'],
+                                              style="TCombobox", font=dropdown_font)
+            bis_month_dropdown.set('Monat auswählen')
+            bis_month_dropdown.grid(row=6, pady=5, padx=10, sticky="w")
+
+            bis_year_dropdown = ttk.Combobox(self.filter_frame, values=list(range(1999, 2023)),
+                                             style="TCombobox", font=dropdown_font)
+            bis_year_dropdown.set('Jahr auswählen')
+            bis_year_dropdown.grid(row=7, pady=10, padx=10, sticky="w")
 
     def show_chart(self, view):
         # Clear existing content in chart_frame
@@ -134,7 +234,6 @@ class GUIApp:
 
         # Update chart_frame content based on the selected view
         if view == "Stadtplan":
-            self.update_dropdown_text('Filter auswählen')  # Reset the dropdown text for other views
             # Embed the map view in the Tkinter window
             map_widget = tkintermapview.TkinterMapView(self.chart_frame, width=800, height=600, corner_radius=0)
             map_widget.pack(fill="both", expand=True)
@@ -163,12 +262,12 @@ class GUIApp:
         elif view == "Preisvergleich":
             # Draw line chart for Preisvergleich
             self.draw_line_chart()
-            self.update_dropdown_text('Zuordnung auswählen')  # Reset the dropdown text for other views
+            self.create_dropdowns(view)  # Adjust dropdowns for Preisvergleich
 
         elif view == "Regionsanalyse":
             # Draw bar chart for Regionsanalyse
             self.draw_bar_chart()
-            self.update_dropdown_text('Filter auswählen')  # Reset the dropdown text for other views
+            self.create_dropdowns(view)  # Adjust dropdowns for Regionsanalyse
 
     def polygon_click(self, polygon):
         print(f"Polygon clicked - text: {polygon.name}")
@@ -231,11 +330,6 @@ class GUIApp:
         canvas = FigureCanvasTkAgg(fig, master=self.chart_frame)
         canvas.draw()
         canvas.get_tk_widget().pack()
-
-    def update_dropdown_text(self, text):
-        # Update the text of the filter_dropdown
-        self.filter_dropdown['values'] = ['Ein-, Zweifamilienhaus', 'Betriebsobjekt', 'Kleingarten']
-        self.filter_dropdown.set(text)  # Set the initial value
 
 if __name__ == "__main__":
     root = tk.Tk()

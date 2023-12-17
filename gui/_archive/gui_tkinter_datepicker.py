@@ -21,7 +21,7 @@ class GUIApp:
         metabar_frame.grid(row=0, column=0, columnspan=3, sticky="ew")
 
         # Add logo to the left corner of the metabar with dynamic width
-        logo_image = tk.PhotoImage(file="REMonitor_Logo.png").subsample(3,
+        logo_image = tk.PhotoImage(file="../REMonitor_Logo.png").subsample(3,
                                                                            3)  # Replace with the path to your logo image
         logo_label = tk.Label(metabar_frame, image=logo_image, bg="#2c3e50")  # Darker color
         logo_label.image = logo_image

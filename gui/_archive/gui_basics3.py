@@ -60,7 +60,7 @@ def create_gui():
     # Metabar-Konfiguration
     metabar_height = int(screen_size[1] * 0.08)  # Höhe der Metabar als Prozentsatz der Bildschirmhöhe
     metabar_bg_color = (0, 0, 0)
-    metabar_logo = pygame.image.load("REMonitor_Logo.png")
+    metabar_logo = pygame.image.load("../REMonitor_Logo.png")
     metabar_logo = pygame.transform.scale(metabar_logo, (int(screen_size[0] * 0.15), metabar_height))
 
     # Navigationsbereich-Konfiguration
