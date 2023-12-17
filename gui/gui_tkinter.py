@@ -6,7 +6,6 @@ import matplotlib.pyplot as plt
 from matplotlib.backends.backend_tkagg import FigureCanvasTkAgg
 import tkintermapview
 
-
 file_path = '../data/processed/bereinigte_kaufpreissammlung.xlsx'
 class GUIApp:
     def __init__(self, root):
@@ -68,14 +67,9 @@ class GUIApp:
                                            style="TButton")  # Added style
         regionsanalyse_button.pack(pady=10)
 
-        # Create dropdowns for each view
-<<<<<<< HEAD
+        # Create content and submit button
         self.create_content(view="Stadtplan")
-=======
-        self.create_dropdowns()
         self.create_submit_button()
-
->>>>>>> bb24b7eb8df3900a4305c136e733d36df3a8d3b4
 
         # Style configuration for buttons and combobox
         style = ttk.Style()
@@ -94,38 +88,19 @@ class GUIApp:
         for widget in self.filter_frame.winfo_children():
             widget.grid_forget()  # Hide all dropdowns initially
 
-<<<<<<< HEAD
         if view == "Stadtplan":
         # Preis, Zuordnung, Zeitraum
-=======
-        # DropDown-Menüs für "Bezirk" hinzufügen
-        bezirk_values = sorted(self.df['PLZ'].unique())
-        self.bezirk_dropdown = ttk.Combobox(self.filter_frame,
-                                            values=bezirk_values,
-                                            style="TCombobox", font=dropdown_font)
-        self.bezirk_dropdown.set('Bezirk auswählen')  # Set the initial value
-        self.bezirk_dropdown.grid(row=0, pady=10, padx=10, sticky="w")
->>>>>>> bb24b7eb8df3900a4305c136e733d36df3a8d3b4
 
             # Preis
             self.preis_dropdown = ttk.Combobox(self.filter_frame, values=['absolut', 'relativ'], style="TCombobox", font=dropdown_font)
             self.preis_dropdown.set('Preis auswählen')
             self.preis_dropdown.grid(row=0, pady=10, padx=10, sticky="w")
 
-<<<<<<< HEAD
             # Zuordnung
-            self.zuordnung_dropdown = ttk.Combobox(self.filter_frame, values=['Abbruchprojekt', 'Villa', 'unbebaut', 'etc.'], style="TCombobox", font=dropdown_font)
-            self.zuordnung_dropdown.set('Zuordnung auswählen')
+            zuordnung_values = sorted(self.df['zuordnung'].unique())
+            self.zuordnung_dropdown = ttk.Combobox(self.filter_frame, values=zuordnung_values, style="TCombobox", font=dropdown_font)
+            self.zuordnung_dropdown.set('Zuordnung auswählen')  # Set the initial value
             self.zuordnung_dropdown.grid(row=1, pady=10, padx=10, sticky="w")
-=======
-        # DropDown-Menüs für "Zuordnung" hinzufügen
-        zuordnung_values = sorted(self.df['zuordnung'].unique())
-        self.zuordnung_dropdown = ttk.Combobox(self.filter_frame,
-                                               values=zuordnung_values,
-                                               style="TCombobox", font=dropdown_font)
-        self.zuordnung_dropdown.set('Zuordnung auswählen')  # Set the initial value
-        self.zuordnung_dropdown.grid(row=2, pady=10, padx=10, sticky="w")
->>>>>>> bb24b7eb8df3900a4305c136e733d36df3a8d3b4
 
             # Zeitraum
             # Dropdowns für "Von: Monat und Jahr"
@@ -168,16 +143,17 @@ class GUIApp:
             self.preis_dropdown.grid(row=0, pady=10, padx=10, sticky="w")
 
             # Bezirk
-            self.bezirk_dropdown = ttk.Combobox(self.filter_frame, values=['1. Bezirk', '2. Bezirk', '3. Bezirk'],
-                                                style="TCombobox", font=dropdown_font)
+            bezirk_values = sorted(self.df['PLZ'].unique())
+            self.bezirk_dropdown = ttk.Combobox(self.filter_frame,
+                                            values=bezirk_values,
+                                            style="TCombobox", font=dropdown_font)
             self.bezirk_dropdown.set('Bezirk auswählen')
             self.bezirk_dropdown.grid(row=1, pady=10, padx=10, sticky="w")
 
             # Zuordnung
-            self.zuordnung_dropdown = ttk.Combobox(self.filter_frame,
-                                                   values=['Abbruchprojekt', 'Villa', 'unbebaut', 'etc.'],
-                                                   style="TCombobox", font=dropdown_font)
-            self.zuordnung_dropdown.set('Zuordnung auswählen')
+            zuordnung_values = sorted(self.df['zuordnung'].unique())
+            self.zuordnung_dropdown = ttk.Combobox(self.filter_frame, values=zuordnung_values, style="TCombobox", font=dropdown_font)
+            self.zuordnung_dropdown.set('Zuordnung auswählen')  # Set the initial value
             self.zuordnung_dropdown.grid(row=2, pady=10, padx=10, sticky="w")
 
             # Zeitraum
@@ -215,10 +191,12 @@ class GUIApp:
         # Bezirk, Filter, Zeitraum
 
             # Bezirk
-            self.bezirk_dropdown = ttk.Combobox(self.filter_frame, values=['1. Bezirk', '2. Bezirk', '3. Bezirk'],
+            bezirk_values = sorted(self.df['PLZ'].unique())
+            self.bezirk_dropdown = ttk.Combobox(self.filter_frame,
+                                                values=bezirk_values,
                                                 style="TCombobox", font=dropdown_font)
             self.bezirk_dropdown.set('Bezirk auswählen')
-            self.bezirk_dropdown.grid(row=0, pady=(10, 0), padx=10, sticky="w")
+            self.bezirk_dropdown.grid(row=1, pady=10, padx=10, sticky="w")
 
             # Filter
             self.filter_dropdown = ttk.Combobox(self.filter_frame,
@@ -262,7 +240,6 @@ class GUIApp:
         submit_button = ttk.Button(self.filter_frame, text="Filter anwenden")
         submit_button.grid(row=9, pady=10, padx=10)
 
-
     def show_chart(self, view):
         # Clear existing content in chart_frame
         for widget in self.chart_frame.winfo_children():
@@ -270,10 +247,6 @@ class GUIApp:
 
         # Update chart_frame content based on the selected view
         if view == "Stadtplan":
-<<<<<<< HEAD
-=======
-            # self.update_dropdown_text('Filter auswählen')  # Reset the dropdown text for other views
->>>>>>> bb24b7eb8df3900a4305c136e733d36df3a8d3b4
             # Embed the map view in the Tkinter window
             map_widget = tkintermapview.TkinterMapView(self.chart_frame, width=800, height=600, corner_radius=0)
             map_widget.pack(fill="both", expand=True)
@@ -302,20 +275,12 @@ class GUIApp:
         elif view == "Preisvergleich":
             # Draw line chart for Preisvergleich
             self.draw_line_chart()
-<<<<<<< HEAD
             self.create_dropdowns(view)  # Adjust dropdowns for Preisvergleich
-=======
-           # self.update_dropdown_text('Zuordnung auswählen')  # Reset the dropdown text for other views
->>>>>>> bb24b7eb8df3900a4305c136e733d36df3a8d3b4
 
         elif view == "Regionsanalyse":
             # Draw bar chart for Regionsanalyse
             self.draw_bar_chart()
-<<<<<<< HEAD
             self.create_dropdowns(view)  # Adjust dropdowns for Regionsanalyse
-=======
-            # self.update_dropdown_text('Filter auswählen')  # Reset the dropdown text for other views
->>>>>>> bb24b7eb8df3900a4305c136e733d36df3a8d3b4
 
     def polygon_click(self, polygon):
         print(f"Polygon clicked - text: {polygon.name}")
@@ -379,14 +344,6 @@ class GUIApp:
         canvas.draw()
         canvas.get_tk_widget().pack()
 
-<<<<<<< HEAD
-=======
-   # def update_dropdown_text(self, text):
-        # Update the text of the filter_dropdown
-        # self.filter_dropdown['values'] = ['Ein-, Zweifamilienhaus', 'Betriebsobjekt', 'Kleingarten']
-        # self.filter_dropdown.set(text)  # Set the initial value
-
->>>>>>> bb24b7eb8df3900a4305c136e733d36df3a8d3b4
 if __name__ == "__main__":
     root = tk.Tk()
     app = GUIApp(root)
