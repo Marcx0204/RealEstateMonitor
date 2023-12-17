@@ -69,7 +69,6 @@ class GUIApp:
 
         # Create content and submit button
         self.create_content(view="Stadtplan")
-        self.create_submit_button()
 
         # Style configuration for buttons and combobox
         style = ttk.Style()
@@ -81,6 +80,7 @@ class GUIApp:
     def create_content(self, view):
         self.create_dropdowns(view)
         self.show_chart(view)
+        self.create_submit_button()
 
     def create_dropdowns(self, view):
 
