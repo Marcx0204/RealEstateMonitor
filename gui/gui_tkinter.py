@@ -238,7 +238,7 @@ class GUIApp:
 
     def create_submit_button(self):
         submit_button = ttk.Button(self.filter_frame, text="Filter anwenden")
-        submit_button.grid(row=9, pady=10, padx=10)
+        submit_button.grid(row=13, pady=10, padx=10)
 
     def show_chart(self, view):
         # Clear existing content in chart_frame
