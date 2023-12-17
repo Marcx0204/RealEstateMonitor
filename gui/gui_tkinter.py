@@ -82,7 +82,7 @@ class GUIApp:
         self.create_dropdowns(view)
         self.show_chart(view)
 
-    def create_dropdowns(self, view="Stadtplan"):
+    def create_dropdowns(self, view):
 
         dropdown_font = ("Helvetica", 12)
         for widget in self.filter_frame.winfo_children():
