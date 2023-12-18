@@ -6,7 +6,7 @@ import matplotlib.pyplot as plt
 from matplotlib.backends.backend_tkagg import FigureCanvasTkAgg
 import tkintermapview
 
-file_path = '../data/processed/bereinigte_kaufpreissammlung.xlsx'
+file_path = '../data/processed/bereinigte_kaufpreissammlung_V2.xlsx'
 class GUIApp:
     def __init__(self, root):
         self.df = pd.read_excel(file_path)
@@ -77,12 +77,66 @@ class GUIApp:
         style.configure("TCombobox", background="#ecf0f1", fieldbackground="#ecf0f1",
                         font=("Helvetica", 12))  # Light gray combobox
 
+
     def create_content(self, view):
-        self.create_dropdowns(view)
+        # Höchstes und niedrigstes Datum erheben
+        # Konvertiere die Spalte "Erwerbsdatum" in ein Datetime-Format
+        self.df['Erwerbsdatum'] = pd.to_datetime(self.df['Erwerbsdatum'])
+        # Finde das niedrigste Datum in der Spalte "Erwerbsdatum"
+        min_date = self.df['Erwerbsdatum'].min()
+        # Extrahiere das Jahr aus dem niedrigsten Datum
+        min_year = int(min_date.year)
+        print(f"Das niedrigste Datum ist: {min_date}")
+        print(f"Das Jahr vom niedrigsten Datum ist: {min_year}")
+
+
+        # Konvertiere die Spalte "Erwerbsdatum" in ein Datetime-Format
+        self.df['Erwerbsdatum'] = pd.to_datetime(self.df['Erwerbsdatum'])
+        # Finde das niedrigste Datum in der Spalte "Erwerbsdatum"
+        max_date = self.df['Erwerbsdatum'].max()
+        # Extrahiere das Jahr aus dem höchsten Datum
+        max_year = int(max_date.year)+1
+        print(f"Das höchste Datum ist: {max_date}")
+        print(f"Das Jahr vom niedrigsten Datum ist: {max_year}")
+
+        self.create_dropdowns(view, min_year, max_year)
         self.show_chart(view)
         self.create_submit_button()
 
-    def create_dropdowns(self, view):
+    def select_min_year(self):
+        # Konvertiere die Spalte "Erwerbsdatum" in ein Datetime-Format
+        self.df['Erwerbsdatum'] = pd.to_datetime(self.df['Erwerbsdatum'])
+        if self.df['Erwerbsdatum'] is None or self.df['Erwerbsdatum'].empty or self.df['Erwerbsdatum'].isnull().all():
+            return 0
+        # Finde das niedrigste Datum in der Spalte "Erwerbsdatum"
+        min_date = self.df['Erwerbsdatum'].min()
+        if min_date is not pd.NaT:
+            # Extrahiere das Jahr aus dem niedrigsten Datum
+            min_year = int(min_date.year)
+            print(f"Das niedrigste Datum ist: {min_date}")
+            print(f"Das Jahr vom niedrigsten Datum ist: {min_year}")
+            return min_year
+        else:
+            return 0
+
+    def select_max_year(self):
+        # Konvertiere die Spalte "Erwerbsdatum" in ein Datetime-Format
+        self.df['Erwerbsdatum'] = pd.to_datetime(self.df['Erwerbsdatum'])
+        if self.df['Erwerbsdatum'] is None or self.df['Erwerbsdatum'].empty or self.df['Erwerbsdatum'].isnull().all():
+            return 0
+        # Finde das niedrigste Datum in der Spalte "Erwerbsdatum"
+        max_date = self.df['Erwerbsdatum'].max()
+        if max_date is not pd.NaT:
+            # Extrahiere das Jahr aus dem höchsten Datum
+            max_year = int(max_date.year)+1
+            print(f"Das höchste Datum ist: {max_date}")
+            print(f"Das Jahr vom höchsten Datum ist: {max_year}")
+            return max_year
+        else:
+            return 0
+
+
+    def create_dropdowns(self, view, min_year, max_year):
 
         dropdown_font = ("Helvetica", 12)
         for widget in self.filter_frame.winfo_children():
@@ -113,7 +167,7 @@ class GUIApp:
             von_month_dropdown.set('Monat auswählen')
             von_month_dropdown.grid(row=3, pady=5, padx=10, sticky="w")
 
-            von_year_dropdown = ttk.Combobox(self.filter_frame, values=list(range(1999, 2023)),
+            von_year_dropdown = ttk.Combobox(self.filter_frame, values=list(range(min_year, max_year)),
                                              style="TCombobox", font=dropdown_font)
             von_year_dropdown.set('Jahr auswählen')
             von_year_dropdown.grid(row=4, pady=5, padx=10, sticky="w")
@@ -128,7 +182,7 @@ class GUIApp:
             bis_month_dropdown.set('Monat auswählen')
             bis_month_dropdown.grid(row=6, pady=5, padx=10, sticky="w")
 
-            bis_year_dropdown = ttk.Combobox(self.filter_frame, values=list(range(1999, 2023)),
+            bis_year_dropdown = ttk.Combobox(self.filter_frame, values=list(range(min_year, max_year)),
                                              style="TCombobox", font=dropdown_font)
             bis_year_dropdown.set('Jahr auswählen')
             bis_year_dropdown.grid(row=7, pady=10, padx=10, sticky="w")
@@ -167,7 +221,7 @@ class GUIApp:
             von_month_dropdown.set('Monat auswählen')
             von_month_dropdown.grid(row=4, pady=5, padx=10, sticky="w")
 
-            von_year_dropdown = ttk.Combobox(self.filter_frame, values=list(range(1999, 2023)),
+            von_year_dropdown = ttk.Combobox(self.filter_frame, values=list(range(min_year, max_year)),
                                              style="TCombobox", font=dropdown_font)
             von_year_dropdown.set('Jahr auswählen')
             von_year_dropdown.grid(row=5, pady=5, padx=10, sticky="w")
@@ -182,7 +236,7 @@ class GUIApp:
             bis_month_dropdown.set('Monat auswählen')
             bis_month_dropdown.grid(row=7, pady=5, padx=10, sticky="w")
 
-            bis_year_dropdown = ttk.Combobox(self.filter_frame, values=list(range(1999, 2023)),
+            bis_year_dropdown = ttk.Combobox(self.filter_frame, values=list(range(min_year, max_year)),
                                              style="TCombobox", font=dropdown_font)
             bis_year_dropdown.set('Jahr auswählen')
             bis_year_dropdown.grid(row=8, pady=10, padx=10, sticky="w")
@@ -216,7 +270,7 @@ class GUIApp:
             von_month_dropdown.set('Monat auswählen')
             von_month_dropdown.grid(row=3, pady=5, padx=10, sticky="w")
 
-            von_year_dropdown = ttk.Combobox(self.filter_frame, values=list(range(1999, 2023)),
+            von_year_dropdown = ttk.Combobox(self.filter_frame, values=list(range(min_year, max_year)),
                                              style="TCombobox", font=dropdown_font)
             von_year_dropdown.set('Jahr auswählen')
             von_year_dropdown.grid(row=4, pady=5, padx=10, sticky="w")
@@ -231,7 +285,7 @@ class GUIApp:
             bis_month_dropdown.set('Monat auswählen')
             bis_month_dropdown.grid(row=6, pady=5, padx=10, sticky="w")
 
-            bis_year_dropdown = ttk.Combobox(self.filter_frame, values=list(range(1999, 2023)),
+            bis_year_dropdown = ttk.Combobox(self.filter_frame, values=list(range(min_year, max_year)),
                                              style="TCombobox", font=dropdown_font)
             bis_year_dropdown.set('Jahr auswählen')
             bis_year_dropdown.grid(row=7, pady=10, padx=10, sticky="w")
@@ -239,6 +293,29 @@ class GUIApp:
     def create_submit_button(self):
         submit_button = ttk.Button(self.filter_frame, text="Filter anwenden")
         submit_button.grid(row=13, pady=10, padx=10)
+
+    def select_min_year(self):
+        # Konvertiere die Spalte "Erwerbsdatum" in ein Datetime-Format
+        self.df['Erwerbsdatum'] = pd.to_datetime(self.df['Erwerbsdatum'])
+        # Finde das niedrigste Datum in der Spalte "Erwerbsdatum"
+        niedrigstes_datum = self.df['Erwerbsdatum'].min()
+        # Extrahiere das Jahr aus dem niedrigsten Datum
+        jahr_vom_niedrigsten_datum = niedrigstes_datum.year
+        # Gib das Jahr aus
+        print(f"Das niedrigste Datum ist: {niedrigstes_datum}")
+        print(f"Das Jahr vom niedrigsten Datum ist: {jahr_vom_niedrigsten_datum}")
+
+
+    def select_max_year(self):
+        # Konvertiere die Spalte "Erwerbsdatum" in ein Datetime-Format
+        self.df['Erwerbsdatum'] = pd.to_datetime(self.df['Erwerbsdatum'])
+        # Finde das niedrigste Datum in der Spalte "Erwerbsdatum"
+        hoechstes_datum = self.df['Erwerbsdatum'].max()
+        # Extrahiere das Jahr aus dem niedrigsten Datum
+        jahr_vom_hoechsten_datum = hoechstes_datum.year
+        # Gib das Jahr aus
+        print(f"Das höchste Datum ist: {hoechstes_datum}")
+        print(f"Das Jahr vom höchsten Datum ist: {jahr_vom_hoechsten_datum}")
 
     def show_chart(self, view):
         # Clear existing content in chart_frame
