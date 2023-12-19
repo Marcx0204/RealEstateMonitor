@@ -5,6 +5,9 @@ from tkinter import ttk
 import matplotlib.pyplot as plt
 from matplotlib.backends.backend_tkagg import FigureCanvasTkAgg
 import tkintermapview
+from PIL import ImageGrab
+import datetime
+
 
 file_path = '../data/processed/bereinigte_kaufpreissammlung_V2.xlsx'
 class GUIApp:
@@ -102,38 +105,28 @@ class GUIApp:
         self.create_dropdowns(view, min_year, max_year)
         self.show_chart(view)
         self.create_submit_button()
+        self.create_screenshot_button()
 
-    def select_min_year(self):
-        # Konvertiere die Spalte "Erwerbsdatum" in ein Datetime-Format
-        self.df['Erwerbsdatum'] = pd.to_datetime(self.df['Erwerbsdatum'])
-        if self.df['Erwerbsdatum'] is None or self.df['Erwerbsdatum'].empty or self.df['Erwerbsdatum'].isnull().all():
-            return 0
-        # Finde das niedrigste Datum in der Spalte "Erwerbsdatum"
-        min_date = self.df['Erwerbsdatum'].min()
-        if min_date is not pd.NaT:
-            # Extrahiere das Jahr aus dem niedrigsten Datum
-            min_year = int(min_date.year)
-            print(f"Das niedrigste Datum ist: {min_date}")
-            print(f"Das Jahr vom niedrigsten Datum ist: {min_year}")
-            return min_year
-        else:
-            return 0
+    def create_screenshot_button(self):
+        # Create a button for taking a screenshot
+        screenshot_button = ttk.Button(self.filter_frame, text="Take Screenshot", command=self.take_screenshot)
+        screenshot_button.grid(row=17, pady=10, padx=10)
 
-    def select_max_year(self):
-        # Konvertiere die Spalte "Erwerbsdatum" in ein Datetime-Format
-        self.df['Erwerbsdatum'] = pd.to_datetime(self.df['Erwerbsdatum'])
-        if self.df['Erwerbsdatum'] is None or self.df['Erwerbsdatum'].empty or self.df['Erwerbsdatum'].isnull().all():
-            return 0
-        # Finde das niedrigste Datum in der Spalte "Erwerbsdatum"
-        max_date = self.df['Erwerbsdatum'].max()
-        if max_date is not pd.NaT:
-            # Extrahiere das Jahr aus dem höchsten Datum
-            max_year = int(max_date.year)+1
-            print(f"Das höchste Datum ist: {max_date}")
-            print(f"Das Jahr vom höchsten Datum ist: {max_year}")
-            return max_year
-        else:
-            return 0
+    def take_screenshot(self):
+        # Get the current timestamp
+        current_time = datetime.datetime.now().strftime("%Y-%m-%d_%H-%M-%S")
+
+        # Construct the screenshot file name with the timestamp
+        screenshot_filename = f"screenshot_{current_time}.png"
+
+        # Get the position of the chart_frame relative to the screen
+        x, y, width, height = self.chart_frame.winfo_rootx(), self.chart_frame.winfo_rooty(), self.chart_frame.winfo_width(), self.chart_frame.winfo_height()
+
+        # Take a screenshot of the chart_frame
+        screenshot = ImageGrab.grab(bbox=(x, y, x + width, y + height))
+
+        # Save the screenshot (change the filename and format as needed)
+        screenshot.save(screenshot_filename, "PNG")
 
 
     def create_dropdowns(self, view, min_year, max_year):
@@ -292,30 +285,7 @@ class GUIApp:
 
     def create_submit_button(self):
         submit_button = ttk.Button(self.filter_frame, text="Filter anwenden")
-        submit_button.grid(row=13, pady=10, padx=10)
-
-    def select_min_year(self):
-        # Konvertiere die Spalte "Erwerbsdatum" in ein Datetime-Format
-        self.df['Erwerbsdatum'] = pd.to_datetime(self.df['Erwerbsdatum'])
-        # Finde das niedrigste Datum in der Spalte "Erwerbsdatum"
-        niedrigstes_datum = self.df['Erwerbsdatum'].min()
-        # Extrahiere das Jahr aus dem niedrigsten Datum
-        jahr_vom_niedrigsten_datum = niedrigstes_datum.year
-        # Gib das Jahr aus
-        print(f"Das niedrigste Datum ist: {niedrigstes_datum}")
-        print(f"Das Jahr vom niedrigsten Datum ist: {jahr_vom_niedrigsten_datum}")
-
-
-    def select_max_year(self):
-        # Konvertiere die Spalte "Erwerbsdatum" in ein Datetime-Format
-        self.df['Erwerbsdatum'] = pd.to_datetime(self.df['Erwerbsdatum'])
-        # Finde das niedrigste Datum in der Spalte "Erwerbsdatum"
-        hoechstes_datum = self.df['Erwerbsdatum'].max()
-        # Extrahiere das Jahr aus dem niedrigsten Datum
-        jahr_vom_hoechsten_datum = hoechstes_datum.year
-        # Gib das Jahr aus
-        print(f"Das höchste Datum ist: {hoechstes_datum}")
-        print(f"Das Jahr vom höchsten Datum ist: {jahr_vom_hoechsten_datum}")
+        submit_button.grid(row=16, pady=10, padx=10)
 
     def show_chart(self, view):
         # Clear existing content in chart_frame
@@ -324,6 +294,7 @@ class GUIApp:
 
         # Update chart_frame content based on the selected view
         if view == "Stadtplan":
+
             # Embed the map view in the Tkinter window
             map_widget = tkintermapview.TkinterMapView(self.chart_frame, width=800, height=600, corner_radius=0)
             map_widget.pack(fill="both", expand=True)
@@ -352,12 +323,10 @@ class GUIApp:
         elif view == "Preisvergleich":
             # Draw line chart for Preisvergleich
             self.draw_line_chart()
-            self.create_dropdowns(view)  # Adjust dropdowns for Preisvergleich
 
         elif view == "Regionsanalyse":
             # Draw bar chart for Regionsanalyse
             self.draw_bar_chart()
-            self.create_dropdowns(view)  # Adjust dropdowns for Regionsanalyse
 
     def polygon_click(self, polygon):
         print(f"Polygon clicked - text: {polygon.name}")
