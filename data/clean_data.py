@@ -1,5 +1,7 @@
 import pandas as pd
 from data.raw.read_data import read_data
+from datetime import datetime
+
 
 def clean_data():
     df = read_data()
@@ -143,7 +145,6 @@ def clean_data():
             return mapping[kstrlgmnd], True  # Gibt das neue PLZ und ein Flag für die Änderung zurück
         return plz, False  # Keine Änderung, gibt das Flag False zurück
 
-
     # Aktualisieren der PLZ und markieren, wenn Änderungen vorgenommen wurden
     for index, row in df_no_outliers.iterrows():
         new_plz, changed = update_plz_if_invalid(row, katastralgemeinde_plz_mapping, valid_plz)
@@ -156,7 +157,18 @@ def clean_data():
     # Entfernen der Einträge, die keine gültige PLZ haben
     df_no_outliers = df_no_outliers[df_no_outliers['PLZ'].isin(valid_plz)]
 
-    # Entfernen von Zeilen, wo 'Erwerbsart' oder 'Erwerbsdatum' fehlt
+    # Konvertieren der 'Erwerbsdatum'-Spalte in datetime, Fehler ignorieren und NaT für Fehler setzen
+    df_no_outliers['Erwerbsdatum'] = pd.to_datetime(df_no_outliers['Erwerbsdatum'], errors='coerce')
+
+    # Setzen Sie hier die Grenzen für das gültige Datum fest
+    min_valid_date = pd.to_datetime('1900-01-01')
+    max_valid_date = pd.to_datetime(datetime.now())
+
+    # Entfernen von Zeilen mit ungültigen Daten
+    df_no_outliers = df_no_outliers[(df_no_outliers['Erwerbsdatum'] >= min_valid_date) &
+                                    (df_no_outliers['Erwerbsdatum'] <= max_valid_date)]
+
+    # Entfernen von Zeilen, wo 'ErwArt' oder 'Erwerbsdatum' fehlen
     df_missing_values = df_no_outliers[df_no_outliers[['ErwArt', 'Erwerbsdatum']].isna().any(axis=1)]
     df_no_outliers = df_no_outliers.dropna(subset=['ErwArt', 'Erwerbsdatum'])
 
@@ -165,4 +177,3 @@ def clean_data():
                             df_missing_values])
 
     return df_no_outliers, df_removed
-

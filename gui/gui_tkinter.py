@@ -7,7 +7,7 @@ from matplotlib.backends.backend_tkagg import FigureCanvasTkAgg
 import tkintermapview
 from PIL import ImageGrab
 import datetime
-
+import matplotlib.dates as mdates
 
 file_path = '../data/processed/bereinigte_kaufpreissammlung_V2.xlsx'
 class GUIApp:
@@ -60,10 +60,10 @@ class GUIApp:
                                       style="TButton")  # Added style
         stadtplan_button.pack(pady=10)
 
-        preisvergleich_button = ttk.Button(navigation_frame, text="Preisvergleich",
-                                           command=lambda: self.create_content("Preisvergleich"),
+        preisanalyse_button = ttk.Button(navigation_frame, text="Preisanalyse",
+                                           command=lambda: self.create_content("Preisanalyse"),
                                            style="TButton")  # Added style
-        preisvergleich_button.pack(pady=10)
+        preisanalyse_button.pack(pady=10)
 
         regionsanalyse_button = ttk.Button(navigation_frame, text="Regionsanalyse",
                                            command=lambda: self.create_content("Regionsanalyse"),
@@ -154,33 +154,33 @@ class GUIApp:
             von_label = tk.Label(self.filter_frame, text="Von:", font=dropdown_font)
             von_label.grid(row=2, pady=5, padx=10, sticky="w")
 
-            von_month_dropdown = ttk.Combobox(self.filter_frame, values=['Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun',
+            self.von_month_dropdown = ttk.Combobox(self.filter_frame, values=['Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun',
                                                                          'Jul', 'Aug', 'Sep', 'Oct', 'Nov', 'Dec'],
                                               style="TCombobox", font=dropdown_font)
-            von_month_dropdown.set('Monat auswählen')
-            von_month_dropdown.grid(row=3, pady=5, padx=10, sticky="w")
+            self.von_month_dropdown.set('Monat auswählen')
+            self.von_month_dropdown.grid(row=3, pady=5, padx=10, sticky="w")
 
-            von_year_dropdown = ttk.Combobox(self.filter_frame, values=list(range(min_year, max_year)),
+            self.von_year_dropdown = ttk.Combobox(self.filter_frame, values=list(range(min_year, max_year)),
                                              style="TCombobox", font=dropdown_font)
-            von_year_dropdown.set('Jahr auswählen')
-            von_year_dropdown.grid(row=4, pady=5, padx=10, sticky="w")
+            self.von_year_dropdown.set('Jahr auswählen')
+            self.von_year_dropdown.grid(row=4, pady=5, padx=10, sticky="w")
 
             # Dropdowns für "Bis: Monat und Jahr"
             bis_label = tk.Label(self.filter_frame, text="Bis:", font=dropdown_font)
             bis_label.grid(row=5, pady=5, padx=10, sticky="w")
 
-            bis_month_dropdown = ttk.Combobox(self.filter_frame, values=['Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun',
+            self.bis_month_dropdown = ttk.Combobox(self.filter_frame, values=['Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun',
                                                                          'Jul', 'Aug', 'Sep', 'Oct', 'Nov', 'Dec'],
                                               style="TCombobox", font=dropdown_font)
-            bis_month_dropdown.set('Monat auswählen')
-            bis_month_dropdown.grid(row=6, pady=5, padx=10, sticky="w")
+            self.bis_month_dropdown.set('Monat auswählen')
+            self.bis_month_dropdown.grid(row=6, pady=5, padx=10, sticky="w")
 
-            bis_year_dropdown = ttk.Combobox(self.filter_frame, values=list(range(min_year, max_year)),
+            self.bis_year_dropdown = ttk.Combobox(self.filter_frame, values=list(range(min_year, max_year)),
                                              style="TCombobox", font=dropdown_font)
-            bis_year_dropdown.set('Jahr auswählen')
-            bis_year_dropdown.grid(row=7, pady=10, padx=10, sticky="w")
+            self.bis_year_dropdown.set('Jahr auswählen')
+            self.bis_year_dropdown.grid(row=7, pady=10, padx=10, sticky="w")
 
-        elif view == "Preisvergleich":
+        elif view == "Preisanalyse":
         # Preis, Bezirk, Zuordnung, Zeitraum
 
             # Preis
@@ -208,31 +208,31 @@ class GUIApp:
             von_label = tk.Label(self.filter_frame, text="Von:", font=dropdown_font)
             von_label.grid(row=3, pady=5, padx=10, sticky="w")
 
-            von_month_dropdown = ttk.Combobox(self.filter_frame, values=['Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun',
+            self.von_month_dropdown = ttk.Combobox(self.filter_frame, values=['Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun',
                                                                          'Jul', 'Aug', 'Sep', 'Oct', 'Nov', 'Dec'],
                                               style="TCombobox", font=dropdown_font)
-            von_month_dropdown.set('Monat auswählen')
-            von_month_dropdown.grid(row=4, pady=5, padx=10, sticky="w")
+            self.von_month_dropdown.set('Monat auswählen')
+            self.von_month_dropdown.grid(row=4, pady=5, padx=10, sticky="w")
 
-            von_year_dropdown = ttk.Combobox(self.filter_frame, values=list(range(min_year, max_year)),
+            self.von_year_dropdown = ttk.Combobox(self.filter_frame, values=list(range(min_year, max_year)),
                                              style="TCombobox", font=dropdown_font)
-            von_year_dropdown.set('Jahr auswählen')
-            von_year_dropdown.grid(row=5, pady=5, padx=10, sticky="w")
+            self.von_year_dropdown.set('Jahr auswählen')
+            self.von_year_dropdown.grid(row=5, pady=5, padx=10, sticky="w")
 
             # Dropdowns für "Bis: Monat und Jahr"
             bis_label = tk.Label(self.filter_frame, text="Bis:", font=dropdown_font)
             bis_label.grid(row=6, pady=5, padx=10, sticky="w")
 
-            bis_month_dropdown = ttk.Combobox(self.filter_frame, values=['Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun',
+            self.bis_month_dropdown = ttk.Combobox(self.filter_frame, values=['Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun',
                                                                          'Jul', 'Aug', 'Sep', 'Oct', 'Nov', 'Dec'],
                                               style="TCombobox", font=dropdown_font)
-            bis_month_dropdown.set('Monat auswählen')
-            bis_month_dropdown.grid(row=7, pady=5, padx=10, sticky="w")
+            self.bis_month_dropdown.set('Monat auswählen')
+            self.bis_month_dropdown.grid(row=7, pady=5, padx=10, sticky="w")
 
-            bis_year_dropdown = ttk.Combobox(self.filter_frame, values=list(range(min_year, max_year)),
+            self.bis_year_dropdown = ttk.Combobox(self.filter_frame, values=list(range(min_year, max_year)),
                                              style="TCombobox", font=dropdown_font)
-            bis_year_dropdown.set('Jahr auswählen')
-            bis_year_dropdown.grid(row=8, pady=10, padx=10, sticky="w")
+            self.bis_year_dropdown.set('Jahr auswählen')
+            self.bis_year_dropdown.grid(row=8, pady=10, padx=10, sticky="w")
 
         elif view == "Regionsanalyse":
         # Bezirk, Filter, Zeitraum
@@ -257,34 +257,74 @@ class GUIApp:
             von_label = tk.Label(self.filter_frame, text="Von:", font=dropdown_font)
             von_label.grid(row=2, pady=5, padx=10, sticky="w")
 
-            von_month_dropdown = ttk.Combobox(self.filter_frame, values=['Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun',
+            self.von_month_dropdown = ttk.Combobox(self.filter_frame, values=['Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun',
                                                                          'Jul', 'Aug', 'Sep', 'Oct', 'Nov', 'Dec'],
                                               style="TCombobox", font=dropdown_font)
-            von_month_dropdown.set('Monat auswählen')
-            von_month_dropdown.grid(row=3, pady=5, padx=10, sticky="w")
+            self.von_month_dropdown.set('Monat auswählen')
+            self.von_month_dropdown.grid(row=3, pady=5, padx=10, sticky="w")
 
-            von_year_dropdown = ttk.Combobox(self.filter_frame, values=list(range(min_year, max_year)),
+            self.von_year_dropdown = ttk.Combobox(self.filter_frame, values=list(range(min_year, max_year)),
                                              style="TCombobox", font=dropdown_font)
-            von_year_dropdown.set('Jahr auswählen')
-            von_year_dropdown.grid(row=4, pady=5, padx=10, sticky="w")
+            self.von_year_dropdown.set('Jahr auswählen')
+            self.von_year_dropdown.grid(row=4, pady=5, padx=10, sticky="w")
 
             # Dropdowns für "Bis: Monat und Jahr"
             bis_label = tk.Label(self.filter_frame, text="Bis:", font=dropdown_font)
             bis_label.grid(row=5, pady=5, padx=10, sticky="w")
 
-            bis_month_dropdown = ttk.Combobox(self.filter_frame, values=['Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun',
+            self.bis_month_dropdown = ttk.Combobox(self.filter_frame, values=['Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun',
                                                                          'Jul', 'Aug', 'Sep', 'Oct', 'Nov', 'Dec'],
                                               style="TCombobox", font=dropdown_font)
-            bis_month_dropdown.set('Monat auswählen')
-            bis_month_dropdown.grid(row=6, pady=5, padx=10, sticky="w")
+            self.bis_month_dropdown.set('Monat auswählen')
+            self.bis_month_dropdown.grid(row=6, pady=5, padx=10, sticky="w")
 
-            bis_year_dropdown = ttk.Combobox(self.filter_frame, values=list(range(min_year, max_year)),
+            self.bis_year_dropdown = ttk.Combobox(self.filter_frame, values=list(range(min_year, max_year)),
                                              style="TCombobox", font=dropdown_font)
-            bis_year_dropdown.set('Jahr auswählen')
-            bis_year_dropdown.grid(row=7, pady=10, padx=10, sticky="w")
+            self.bis_year_dropdown.set('Jahr auswählen')
+            self.bis_year_dropdown.grid(row=7, pady=10, padx=10, sticky="w")
+
+    def apply_filters(self):
+        # Abrufen der ausgewählten Werte aus den Dropdowns
+        selected_bezirk = self.bezirk_dropdown.get()
+
+        von_month = self.von_month_dropdown.get()
+        von_year = self.von_year_dropdown.get()
+        bis_month = self.bis_month_dropdown.get()
+        bis_year = self.bis_year_dropdown.get()
+
+        # Umwandlung der Werte in ein Datumsformat
+        start_date = f"{von_year}-{self.month_to_number(von_month)}-01" if von_month != 'Monat auswählen' else None
+        end_date = f"{bis_year}-{self.month_to_number(bis_month)}-01" if bis_month != 'Monat auswählen' else None
+
+        # Filtern des DataFrames
+        filtered_df = self.filter_dataframe_by_date(start_date, end_date)
+
+        # Hier können Sie weitere Aktionen mit dem gefilterten DataFrame ausführen
+        # Draw line chart for Preisvergleich
+        self.draw_line_chart(filtered_df)
+
+        print(filtered_df)
+
+    def month_to_number(self, month_name):
+        months = ['Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun', 'Jul', 'Aug', 'Sep', 'Oct', 'Nov', 'Dec']
+        return str(months.index(month_name) + 1).zfill(2)
+
+    def filter_dataframe_by_date(self, start_date, end_date):
+        filtered_df = self.df.copy()
+        filtered_df['Erwerbsdatum'] = pd.to_datetime(filtered_df['Erwerbsdatum'], errors='coerce')
+
+        if start_date:
+            start_date = pd.to_datetime(start_date)
+            filtered_df = filtered_df[filtered_df['Erwerbsdatum'] >= start_date]
+
+        if end_date:
+            end_date = pd.to_datetime(end_date)
+            filtered_df = filtered_df[filtered_df['Erwerbsdatum'] <= end_date]
+
+        return filtered_df
 
     def create_submit_button(self):
-        submit_button = ttk.Button(self.filter_frame, text="Filter anwenden")
+        submit_button = ttk.Button(self.filter_frame, text="Filter anwenden", command=self.apply_filters)
         submit_button.grid(row=16, pady=10, padx=10)
 
     def show_chart(self, view):
@@ -320,9 +360,9 @@ class GUIApp:
             district_22 = map_widget.set_polygon(district_22_polygon, fill_color=self.get_district_fill_color("22"),
                                                  command=self.polygon_click, name="district_22_polygon")
 
-        elif view == "Preisvergleich":
+        #elif view == "Preisvergleich":
             # Draw line chart for Preisvergleich
-            self.draw_line_chart()
+
 
         elif view == "Regionsanalyse":
             # Draw bar chart for Regionsanalyse
@@ -342,29 +382,36 @@ class GUIApp:
         # Return the fill color for the given district number, defaulting to a color if not found in the mapping
         return district_color_mapping.get(district_number, "blue")
 
-    def draw_line_chart(self):
-        # Example data for a line chart
-        x_values = [1, 2, 3, 4, 5]
-        y_values = [10, 15, 7, 12, 9]
+    def draw_line_chart(self, filtered_df):
+        # Stellen Sie sicher, dass der DataFrame die notwendigen Spalten enthält
+        if 'Erwerbsdatum' in filtered_df.columns and 'Kaufpreis €' in filtered_df.columns:
+            # Extrahieren Sie die Daten für die X- und y-Achse
+            x_values = pd.to_datetime(filtered_df['Erwerbsdatum'])
+            # Gruppieren Sie die Daten nach Jahr (oder Monat) und berechnen Sie den Durchschnittspreis
+            df_grouped = filtered_df.groupby(filtered_df['Erwerbsdatum'].dt.year)['Kaufpreis €'].mean()
 
-        # Create a figure and axis
-        fig, ax = plt.subplots()
+            # Erstellen Sie die X- und Y-Werte für das Diagramm
+            x_values = df_grouped.index
+            y_values = df_grouped.values
 
-        # Plot the line chart
-        ax.plot(x_values, y_values, label='Line Chart')
+            # Erstellen Sie eine Figur und eine Achse
+            fig, ax = plt.subplots()
 
-        # Set labels and title
-        ax.set_xlabel('X-axis')
-        ax.set_ylabel('Y-axis')
-        ax.set_title('Line Chart Example')
+            # Zeichnen Sie das Liniendiagramm
+            ax.plot(x_values, y_values, label='Durchschnittlicher Preis')
 
-        # Add a legend
-        ax.legend()
+            # Setzen Sie Beschriftungen und Titel
+            ax.set_xlabel('Erwerbsdatum')
+            ax.set_ylabel('Durchschnittspreis in €')
+            ax.set_title('Durchschnittliche Preisentwicklung über Zeit')
 
-        # Embed the chart in the Tkinter window
-        canvas = FigureCanvasTkAgg(fig, master=self.chart_frame)
-        canvas.draw()
-        canvas.get_tk_widget().pack()
+            # Fügen Sie eine Legende hinzu
+            ax.legend()
+
+            # Binden Sie das Diagramm in das Tkinter-Fenster ein
+            canvas = FigureCanvasTkAgg(fig, master=self.chart_frame)
+            canvas.draw()
+            canvas.get_tk_widget().pack()
 
     def draw_bar_chart(self):
         # Example data for a bar chart
