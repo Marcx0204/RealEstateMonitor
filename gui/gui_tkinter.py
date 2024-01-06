@@ -9,6 +9,8 @@ from PIL import ImageGrab
 import datetime
 import matplotlib.dates as mdates
 
+from data.filter_data import filter_by_zip
+
 file_path = '../data/processed/bereinigte_kaufpreissammlung.xlsx'
 class GUIApp:
     def __init__(self, root):
@@ -190,10 +192,10 @@ class GUIApp:
             self.preis_dropdown.grid(row=0, pady=10, padx=10, sticky="w")
 
             # Bezirk
-            bezirk_values = sorted(self.df['PLZ'].unique())
+            bezirk_values = ['Alle Bezirke'] + sorted(self.df['PLZ'].unique())
             self.bezirk_dropdown = ttk.Combobox(self.filter_frame,
-                                            values=bezirk_values,
-                                            style="TCombobox", font=dropdown_font)
+                                                values=bezirk_values,
+                                                style="TCombobox", font=dropdown_font)
             self.bezirk_dropdown.set('Bezirk auswählen')
             self.bezirk_dropdown.grid(row=1, pady=10, padx=10, sticky="w")
 
@@ -286,6 +288,9 @@ class GUIApp:
     def apply_filters(self):
         # Abrufen der ausgewählten Werte aus den Dropdowns
         selected_bezirk = self.bezirk_dropdown.get()
+        # Debugging-Ausgaben
+        print(f"Ausgewählter Bezirk: {selected_bezirk}")
+        print(f"DataFrame vor dem Filtern: {self.df.head()}")
 
         von_month = self.von_month_dropdown.get()
         von_year = self.von_year_dropdown.get()
@@ -296,13 +301,17 @@ class GUIApp:
         start_date = f"{von_year}-{self.month_to_number(von_month)}-01" if von_month != 'Monat auswählen' else None
         end_date = f"{bis_year}-{self.month_to_number(bis_month)}-01" if bis_month != 'Monat auswählen' else None
 
-        # Filtern des DataFrames
+        # Filtern des DataFrames nach Datum
         filtered_df = self.filter_dataframe_by_date(start_date, end_date)
 
-        # Hier können Sie weitere Aktionen mit dem gefilterten DataFrame ausführen
-        # Draw line chart for Preisvergleich
+        # Überprüfen, ob der ausgewählte Bezirk gültig ist
+        if selected_bezirk not in ['Bezirk auswählen', 'Alle Bezirke']:
+            filtered_df = filter_by_zip(self.df, int(selected_bezirk))
+
+        # Zeichnen des Liniendiagramms mit dem gefilterten DataFrame
         self.draw_line_chart(filtered_df)
 
+        # Optionale Ausgabe zur Überprüfung
         print(filtered_df)
 
     def month_to_number(self, month_name):
