@@ -9,7 +9,7 @@ from PIL import ImageGrab
 import datetime
 import matplotlib.dates as mdates
 
-file_path = '../data/processed/bereinigte_kaufpreissammlung_V2.xlsx'
+file_path = '../data/processed/bereinigte_kaufpreissammlung.xlsx'
 class GUIApp:
     def __init__(self, root):
         self.df = pd.read_excel(file_path)
@@ -383,6 +383,10 @@ class GUIApp:
         return district_color_mapping.get(district_number, "blue")
 
     def draw_line_chart(self, filtered_df):
+
+        for widget in self.chart_frame.winfo_children():
+            widget.destroy()
+
         # Stellen Sie sicher, dass der DataFrame die notwendigen Spalten enthält
         if 'Erwerbsdatum' in filtered_df.columns and 'Kaufpreis €' in filtered_df.columns:
             # Extrahieren Sie die Daten für die X- und y-Achse
