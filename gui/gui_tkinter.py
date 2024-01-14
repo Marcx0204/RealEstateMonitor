@@ -2,6 +2,7 @@ import tkinter as tk
 import openpyxl
 import pandas as pd
 from tkinter import ttk
+import geopandas as gpd
 import matplotlib.pyplot as plt
 from matplotlib.backends.backend_tkagg import FigureCanvasTkAgg
 import tkintermapview
@@ -344,6 +345,9 @@ class GUIApp:
         # Update chart_frame content based on the selected view
         if view == "Stadtplan":
 
+            # Read the GeoJSON file into a GeoDataFrame
+            gdf = gpd.read_file('../data/raw/BEZIRKSGRENZEOGDPolygon.geojson')
+
             # Embed the map view in the Tkinter window
             map_widget = tkintermapview.TkinterMapView(self.chart_frame, width=800, height=600, corner_radius=0)
             map_widget.pack(fill="both", expand=True)
@@ -356,18 +360,37 @@ class GUIApp:
             map_widget.set_position(48.2082, 16.3738, marker=False)  # Vienna, Austria
             map_widget.set_zoom(12)
 
-            # Coordinates for an approximate outline of the 22nd district of Vienna (PLZ 1220)
-            district_22_polygon = [
-                (48.22663, 16.37513),
-                (48.23053, 16.40023),
-                (48.24523, 16.41293),
-                (48.24623, 16.41413),
-                (48.24623, 16.41543)
-            ]
+            def polygon_click(polygon):
+                print(f"polygon clicked - text: {polygon.name}")
 
-            # Set a polygon for the 22nd district with a dynamic fill color (e.g., "green")
-            district_22 = map_widget.set_polygon(district_22_polygon, fill_color=self.get_district_fill_color("22"),
-                                                 command=self.polygon_click, name="district_22_polygon")
+            # Iterate over all districts
+            for bezirk_number in gdf['BEZNR'].unique():
+                # Extract coordinates for the current district
+                district_geometry = gdf[gdf['BEZNR'] == bezirk_number]['geometry'].iloc[0]
+                coordinates = list(district_geometry.exterior.coords)
+
+                # Convert coordinates to latitude and longitude
+                district_polygon = [(y, x) for x, y in coordinates]
+
+                # Set fill and border colors based on BEZNR criteria
+                if 1 <= bezirk_number <= 6:
+                    fill_color = "red"
+                    outline_color = "red"
+                elif 7 <= bezirk_number <= 15:
+                    fill_color = "orange"
+                    outline_color = "orange"
+                elif 15 <= bezirk_number <= 23:
+                    fill_color = "green"
+                    outline_color = "green"
+                else:
+                    fill_color = None
+                    outline_color = "black"  # You can adjust the default border color as needed
+
+                # Set a polygon for the current district
+                district_name = f"district_{bezirk_number}_polygon"
+                map_widget.set_polygon(district_polygon, fill_color=fill_color, outline_color=outline_color,
+                                       border_width=2, command=polygon_click, name=district_name)
+
 
         #elif view == "Preisvergleich":
             # Draw line chart for Preisvergleich
