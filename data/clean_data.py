@@ -2,6 +2,13 @@ import pandas as pd
 from data.raw.read_data import read_data
 from datetime import datetime
 
+def remove_price_outliers(df, column='Kaufpreis €', factor=1.5):
+    Q1 = df[column].quantile(0.25)
+    Q3 = df[column].quantile(0.75)
+    IQR = Q3 - Q1
+    lower_bound = Q1 - factor * IQR
+    upper_bound = Q3 + factor * IQR
+    return df[(df[column] >= lower_bound) & (df[column] <= upper_bound)]
 
 def clean_data():
     df = read_data()
@@ -151,6 +158,8 @@ def clean_data():
         df_no_outliers.at[index, 'PLZ'] = new_plz
         # df_no_outliers.at[index, 'PLZ_Changed'] = changed
 
+
+
     # Sicherung des DataFrames vor dem Entfernen von Zeilen
     df_before_removal = df_no_outliers.copy()
 
@@ -167,6 +176,9 @@ def clean_data():
     # Entfernen von Zeilen mit ungültigen Daten
     df_no_outliers = df_no_outliers[(df_no_outliers['Erwerbsdatum'] >= min_valid_date) &
                                     (df_no_outliers['Erwerbsdatum'] <= max_valid_date)]
+
+    # Entfernen von Ausreißern im 'Kaufpreis €'
+    df_no_outliers = remove_price_outliers(df_no_outliers)
 
     # Entfernen von Zeilen, wo 'ErwArt' oder 'Erwerbsdatum' fehlen
     df_missing_values = df_no_outliers[df_no_outliers[['ErwArt', 'Erwerbsdatum']].isna().any(axis=1)]
