@@ -108,7 +108,7 @@ class GUIApp:
 
         self.create_dropdowns(view, min_year, max_year)
         self.show_chart(view)
-        self.create_submit_button()
+        self.create_submit_button(view)
         self.create_screenshot_button()
 
     def create_screenshot_button(self):
@@ -132,6 +132,16 @@ class GUIApp:
         # Save the screenshot (change the filename and format as needed)
         screenshot.save(screenshot_filename, "PNG")
 
+    def create_submit_button(self, view):
+        if view == "Stadtplan":
+            submit_button = ttk.Button(self.filter_frame, text="Filter anwenden", command=self.apply_filters_Stadtplan)
+            submit_button.grid(row=16, pady=10, padx=10)
+        elif view == "Preisanalyse":
+            submit_button = ttk.Button(self.filter_frame, text="Filter anwenden", command=self.apply_filters_Preis)
+            submit_button.grid(row=16, pady=10, padx=10)
+        elif view == "Regionsanalyse":
+            submit_button = ttk.Button(self.filter_frame, text="Filter anwenden", command=self.apply_filters_Region)
+            submit_button.grid(row=16, pady=10, padx=10)
 
     def create_dropdowns(self, view, min_year, max_year):
 
@@ -141,6 +151,7 @@ class GUIApp:
 
         if view == "Stadtplan":
         # Preis, Zuordnung, Zeitraum
+
 
             # Preis
             self.preis_dropdown = ttk.Combobox(self.filter_frame, values=['absolut', 'relativ'], style="TCombobox", font=dropdown_font)
@@ -287,7 +298,7 @@ class GUIApp:
             self.bis_year_dropdown.set('Jahr auswählen')
             self.bis_year_dropdown.grid(row=7, pady=10, padx=10, sticky="w")
 
-    def apply_filters(self):
+    def apply_filters_Preis(self):
         # Abrufen der ausgewählten Werte aus den Dropdowns
         selected_bezirk = self.bezirk_dropdown.get()
         # Debugging-Ausgaben
@@ -316,6 +327,120 @@ class GUIApp:
         # Optionale Ausgabe zur Überprüfung
         print(filtered_df)
 
+    def apply_filters_Stadtplan(self):
+        # Abrufen der ausgewählten Werte aus den Dropdowns
+        print(f"DataFrame vor dem Filtern: {self.df.head()}")
+
+        von_month = self.von_month_dropdown.get()
+        von_year = self.von_year_dropdown.get()
+        bis_month = self.bis_month_dropdown.get()
+        bis_year = self.bis_year_dropdown.get()
+
+        # Umwandlung der Werte in ein Datumsformat
+        start_date = f"{von_year}-{self.month_to_number(von_month)}-01" if von_month != 'Monat auswählen' else None
+        end_date = f"{bis_year}-{self.month_to_number(bis_month)}-01" if bis_month != 'Monat auswählen' else None
+
+        # Filtern des DataFrames nach Datum
+        filtered_df = self.filter_dataframe_by_date(start_date, end_date)
+
+
+        # Zeichnen des Stadtplans mit dem gefilterten DataFrame
+        self.draw_stadtPlan(filtered_df)
+
+        # Optionale Ausgabe zur Überprüfung
+        print(filtered_df)
+
+    def draw_stadtPlan(self, filtered_df):
+        # Clear existing content in chart_frame
+        for widget in self.chart_frame.winfo_children():
+            widget.destroy()
+        # Read the GeoJSON file into a GeoDataFrame
+        gdf = gpd.read_file('../data/raw/BEZIRKSGRENZEOGDPolygon.geojson')
+
+        # Embed the map view in the Tkinter window
+        map_widget = tkintermapview.TkinterMapView(self.chart_frame, width=800, height=600, corner_radius=0)
+        map_widget.pack(fill="both", expand=True)
+
+        # Set Wien tile server
+        map_widget.set_tile_server(
+            "https://maps.wien.gv.at/basemap/geolandbasemap/normal/google3857/{z}/{y}/{x}.png", max_zoom=22)
+
+        # Set current position and zoom to Wien
+        map_widget.set_position(48.2082, 16.3738, marker=False)  # Vienna, Austria
+        map_widget.set_zoom(12)
+
+        print(filtered_df)
+
+        def polygon_click(polygon):
+            print(f"polygon clicked - text: {polygon.name}")
+
+        # Iterate over all districts
+        for bezirk_number in gdf['BEZNR'].unique():
+            # Extract coordinates for the current district
+            district_geometry = gdf[gdf['BEZNR'] == bezirk_number]['geometry'].iloc[0]
+            coordinates = list(district_geometry.exterior.coords)
+
+            # Convert coordinates to latitude and longitude
+            district_polygon = [(y, x) for x, y in coordinates]
+
+            # Get the PLZ corresponding to the BEZNR
+            plz_for_bezirk = bezirk_number * 10 + 1000;
+
+            # Convert 'BEZNR' to string before concatenation
+            # plz_for_bezirk = str(plz_for_bezirk)
+
+            # Calculate median 'Kaufpreis €' for the current district
+            district_median_price = filtered_df[filtered_df['PLZ'] == plz_for_bezirk]['Kaufpreis €'].median()
+
+            print(plz_for_bezirk)
+            print(bezirk_number)
+            print(district_median_price)
+            # Set fill and border colors based on median 'Kaufpreis €'
+            if district_median_price <= 300000:
+                fill_color = "green"
+                outline_color = "green"
+            elif 300000 < district_median_price <= 500000:
+                fill_color = "orange"
+                outline_color = "orange"
+            else:
+                fill_color = "red"
+                outline_color = "red"
+
+            # Set a polygon for the current district
+            district_name = f"district_{bezirk_number}_polygon"
+            map_widget.set_polygon(district_polygon, fill_color=fill_color, outline_color=outline_color,
+                                   border_width=2, command=polygon_click, name=district_name)
+
+
+    def apply_filters_Region(self):
+        # Abrufen der ausgewählten Werte aus den Dropdowns
+        selected_bezirk = self.bezirk_dropdown.get()
+        # Debugging-Ausgaben
+        print(f"Ausgewählter Bezirk: {selected_bezirk}")
+        print(f"DataFrame vor dem Filtern: {self.df.head()}")
+
+        von_month = self.von_month_dropdown.get()
+        von_year = self.von_year_dropdown.get()
+        bis_month = self.bis_month_dropdown.get()
+        bis_year = self.bis_year_dropdown.get()
+
+        # Umwandlung der Werte in ein Datumsformat
+        start_date = f"{von_year}-{self.month_to_number(von_month)}-01" if von_month != 'Monat auswählen' else None
+        end_date = f"{bis_year}-{self.month_to_number(bis_month)}-01" if bis_month != 'Monat auswählen' else None
+
+        # Filtern des DataFrames nach Datum
+        filtered_df = self.filter_dataframe_by_date(start_date, end_date)
+
+        # Überprüfen, ob der ausgewählte Bezirk gültig ist
+        if selected_bezirk not in ['Bezirk auswählen', 'Alle Bezirke']:
+            filtered_df = filter_by_zip(self.df, int(selected_bezirk))
+
+        # Zeichnen des Liniendiagramms mit dem gefilterten DataFrame
+        self.draw_bar_chart()
+
+        # Optionale Ausgabe zur Überprüfung
+        print(filtered_df)
+
     def month_to_number(self, month_name):
         months = ['Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun', 'Jul', 'Aug', 'Sep', 'Oct', 'Nov', 'Dec']
         return str(months.index(month_name) + 1).zfill(2)
@@ -334,10 +459,6 @@ class GUIApp:
 
         return filtered_df
 
-    def create_submit_button(self):
-        submit_button = ttk.Button(self.filter_frame, text="Filter anwenden", command=self.apply_filters)
-        submit_button.grid(row=16, pady=10, padx=10)
-
     def show_chart(self, view):
         # Clear existing content in chart_frame
         for widget in self.chart_frame.winfo_children():
@@ -345,74 +466,18 @@ class GUIApp:
 
         # Update chart_frame content based on the selected view
         if view == "Stadtplan":
+            self.draw_stadtPlan(self.df)
 
-            # Read the GeoJSON file into a GeoDataFrame
-            gdf = gpd.read_file('../data/raw/BEZIRKSGRENZEOGDPolygon.geojson')
-
-            # Embed the map view in the Tkinter window
-            map_widget = tkintermapview.TkinterMapView(self.chart_frame, width=800, height=600, corner_radius=0)
-            map_widget.pack(fill="both", expand=True)
-
-            # Set Wien tile server
-            map_widget.set_tile_server(
-                "https://maps.wien.gv.at/basemap/geolandbasemap/normal/google3857/{z}/{y}/{x}.png", max_zoom=22)
-
-            # Set current position and zoom to Wien
-            map_widget.set_position(48.2082, 16.3738, marker=False)  # Vienna, Austria
-            map_widget.set_zoom(12)
-
-            print(self.df)
-            def polygon_click(polygon):
-                print(f"polygon clicked - text: {polygon.name}")
-
-
-
-            # Iterate over all districts
-            for bezirk_number in gdf['BEZNR'].unique():
-                # Extract coordinates for the current district
-                district_geometry = gdf[gdf['BEZNR'] == bezirk_number]['geometry'].iloc[0]
-                coordinates = list(district_geometry.exterior.coords)
-
-                # Convert coordinates to latitude and longitude
-                district_polygon = [(y, x) for x, y in coordinates]
-
-                #Get the PLZ corresponding to the BEZNR
-                plz_for_bezirk = bezirk_number*10+1000;
-
-                # Convert 'BEZNR' to string before concatenation
-                #plz_for_bezirk = str(plz_for_bezirk)
-
-
-                # Calculate median 'Kaufpreis €' for the current district
-                district_median_price = self.df[self.df['PLZ'] == plz_for_bezirk]['Kaufpreis €'].median()
-
-
-                print(plz_for_bezirk)
-                print(bezirk_number)
-                print(district_median_price)
-                # Set fill and border colors based on median 'Kaufpreis €'
-                if district_median_price <= 300000:
-                    fill_color = "green"
-                    outline_color = "green"
-                elif 300000 < district_median_price <= 500000:
-                    fill_color = "orange"
-                    outline_color = "orange"
-                else:
-                    fill_color = "red"
-                    outline_color = "red"
-
-                # Set a polygon for the current district
-                district_name = f"district_{bezirk_number}_polygon"
-                map_widget.set_polygon(district_polygon, fill_color=fill_color, outline_color=outline_color,
-                                       border_width=2, command=polygon_click, name=district_name)
-
-        #elif view == "Preisvergleich":
+        # Add the missing indented block for the elif statement
+        elif view == "Preisvergleich":
             # Draw line chart for Preisvergleich
-
+            pass  # Placeholder; add your code here
 
         elif view == "Regionsanalyse":
             # Draw bar chart for Regionsanalyse
             self.draw_bar_chart()
+
+
 
     def polygon_click(self, polygon):
         print(f"Polygon clicked - text: {polygon.name}")
@@ -464,6 +529,10 @@ class GUIApp:
             canvas.get_tk_widget().pack()
 
     def draw_bar_chart(self):
+        # Clear existing content in chart_frame
+        for widget in self.chart_frame.winfo_children():
+            widget.destroy()
+
         # Example data for a bar chart
         categories = ['Category A', 'Category B', 'Category C', 'Category D', 'Category E']
         values = [15, 24, 10, 30, 18]
