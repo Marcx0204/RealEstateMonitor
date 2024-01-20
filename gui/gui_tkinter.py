@@ -7,6 +7,7 @@ import matplotlib.pyplot as plt
 from matplotlib.backends.backend_tkagg import FigureCanvasTkAgg
 import tkintermapview
 from PIL import ImageGrab
+import numpy as np
 import datetime
 import matplotlib.dates as mdates
 
@@ -360,8 +361,11 @@ class GUIApp:
             map_widget.set_position(48.2082, 16.3738, marker=False)  # Vienna, Austria
             map_widget.set_zoom(12)
 
+            print(self.df)
             def polygon_click(polygon):
                 print(f"polygon clicked - text: {polygon.name}")
+
+
 
             # Iterate over all districts
             for bezirk_number in gdf['BEZNR'].unique():
@@ -372,25 +376,35 @@ class GUIApp:
                 # Convert coordinates to latitude and longitude
                 district_polygon = [(y, x) for x, y in coordinates]
 
-                # Set fill and border colors based on BEZNR criteria
-                if 1 <= bezirk_number <= 6:
-                    fill_color = "red"
-                    outline_color = "red"
-                elif 7 <= bezirk_number <= 15:
-                    fill_color = "orange"
-                    outline_color = "orange"
-                elif 15 <= bezirk_number <= 23:
+                #Get the PLZ corresponding to the BEZNR
+                plz_for_bezirk = bezirk_number*10+1000;
+
+                # Convert 'BEZNR' to string before concatenation
+                #plz_for_bezirk = str(plz_for_bezirk)
+
+
+                # Calculate median 'Kaufpreis €' for the current district
+                district_median_price = self.df[self.df['PLZ'] == plz_for_bezirk]['Kaufpreis €'].median()
+
+
+                print(plz_for_bezirk)
+                print(bezirk_number)
+                print(district_median_price)
+                # Set fill and border colors based on median 'Kaufpreis €'
+                if district_median_price <= 300000:
                     fill_color = "green"
                     outline_color = "green"
+                elif 300000 < district_median_price <= 500000:
+                    fill_color = "orange"
+                    outline_color = "orange"
                 else:
-                    fill_color = None
-                    outline_color = "black"  # You can adjust the default border color as needed
+                    fill_color = "red"
+                    outline_color = "red"
 
                 # Set a polygon for the current district
                 district_name = f"district_{bezirk_number}_polygon"
                 map_widget.set_polygon(district_polygon, fill_color=fill_color, outline_color=outline_color,
                                        border_width=2, command=polygon_click, name=district_name)
-
 
         #elif view == "Preisvergleich":
             # Draw line chart for Preisvergleich
