@@ -15,7 +15,7 @@ import os
 
 from data.filter_data import filter_by_zip
 
-file_path = '../data/processed/bereinigte_kaufpreissammlung.xlsx'
+file_path = '../../data/processed/bereinigte_kaufpreissammlung.xlsx'
 class GUIApp:
     def __init__(self, root):
         self.df = pd.read_excel(file_path)
@@ -33,8 +33,8 @@ class GUIApp:
         metabar_frame.grid(row=0, column=0, columnspan=3, sticky="ew")
 
         # Add logo to the left corner of the metabar with dynamic width
-        logo_image = tk.PhotoImage(file="REMonitor_Logo.png").subsample(5,
-                                                                        5)  # Replace with the path to your logo image
+        logo_image = tk.PhotoImage(file="../REMonitor_Logo.png").subsample(5,
+                                                                           5)  # Replace with the path to your logo image
         logo_label = tk.Label(metabar_frame, image=logo_image, bg="#2c3e50")  # Darker color
         logo_label.image = logo_image
         logo_label.pack(side="left", padx=10, pady=10, anchor="w")
@@ -140,7 +140,7 @@ class GUIApp:
             screenshot_path = os.path.join(folder_path, screenshot_filename)
             screenshot.save(screenshot_path, "PNG")
 
-            # display a message to the user
+            # Optionally, display a message to the user
             messagebox.showinfo("Screenshot Saved", f"Screenshot saved to: {screenshot_path}")
 
     def create_submit_button(self, view):
@@ -370,7 +370,7 @@ class GUIApp:
         for widget in self.chart_frame.winfo_children():
             widget.destroy()
         # Read the GeoJSON file into a GeoDataFrame
-        gdf = gpd.read_file('../data/raw/BEZIRKSGRENZEOGDPolygon.geojson')
+        gdf = gpd.read_file('../../data/raw/BEZIRKSGRENZEOGDPolygon.geojson')
 
         # Embed the map view in the Tkinter window
         map_widget = tkintermapview.TkinterMapView(self.chart_frame, width=800, height=600, corner_radius=0)
@@ -494,23 +494,15 @@ class GUIApp:
             # Add additional branches for other views if needed
             return
 
-        # Get the current timestamp
-        current_time = datetime.datetime.now().strftime("%Y-%m-%d_%H-%M-%S")
+        # Prompt user to choose a file path for saving the Excel file
+        file_path = tk.filedialog.asksaveasfilename(defaultextension=".xlsx",
+                                                    filetypes=[("Excel files", "*.xlsx")],
+                                                    title="Save Filtered Data")
 
-        data_filename = f"filtered_data_{view}_{current_time}.xlsx"
-
-        # Prompt user to choose a folder path for saving the Excel file
-        folder_path = tk.filedialog.askdirectory(title="Select Folder to Save Filtered Data")
-
-        if folder_path:
-            # Construct the file path based on the selected folder and save the Excel file
-            file_path = os.path.join(folder_path, data_filename)
+        if file_path:
+            # Save the filtered data to the specified file path
             filtered_df.to_excel(file_path, index=False)
             print(f"Filtered data saved to: {file_path}")
-
-            # display a message to the user
-            messagebox.showinfo("Data saved in xlsx", f"Data saved to: {file_path}")
-
 
     def show_chart(self, view):
         # Clear existing content in chart_frame

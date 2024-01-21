@@ -15,7 +15,7 @@ import os
 
 from data.filter_data import filter_by_zip
 
-file_path = '../data/processed/bereinigte_kaufpreissammlung.xlsx'
+file_path = '../../data/processed/bereinigte_kaufpreissammlung.xlsx'
 class GUIApp:
     def __init__(self, root):
         self.df = pd.read_excel(file_path)
@@ -33,8 +33,8 @@ class GUIApp:
         metabar_frame.grid(row=0, column=0, columnspan=3, sticky="ew")
 
         # Add logo to the left corner of the metabar with dynamic width
-        logo_image = tk.PhotoImage(file="REMonitor_Logo.png").subsample(5,
-                                                                        5)  # Replace with the path to your logo image
+        logo_image = tk.PhotoImage(file="../REMonitor_Logo.png").subsample(5,
+                                                                           5)  # Replace with the path to your logo image
         logo_label = tk.Label(metabar_frame, image=logo_image, bg="#2c3e50")  # Darker color
         logo_label.image = logo_image
         logo_label.pack(side="left", padx=10, pady=10, anchor="w")
@@ -370,7 +370,7 @@ class GUIApp:
         for widget in self.chart_frame.winfo_children():
             widget.destroy()
         # Read the GeoJSON file into a GeoDataFrame
-        gdf = gpd.read_file('../data/raw/BEZIRKSGRENZEOGDPolygon.geojson')
+        gdf = gpd.read_file('../../data/raw/BEZIRKSGRENZEOGDPolygon.geojson')
 
         # Embed the map view in the Tkinter window
         map_widget = tkintermapview.TkinterMapView(self.chart_frame, width=800, height=600, corner_radius=0)
