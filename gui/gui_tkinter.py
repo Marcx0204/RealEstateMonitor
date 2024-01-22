@@ -451,7 +451,7 @@ class GUIApp:
             filtered_df = filter_by_zip(self.df, int(selected_bezirk))
 
         # Zeichnen des Liniendiagramms mit dem gefilterten DataFrame
-        self.draw_bar_chart()
+        self.draw_bar_chart(filtered_df)
 
         # Optionale Ausgabe zur Überprüfung
         print("Filtered Data:")
@@ -467,6 +467,7 @@ class GUIApp:
         filtered_df['Erwerbsdatum'] = pd.to_datetime(filtered_df['Erwerbsdatum'], errors='coerce')
 
         if start_date:
+            start_date = pd.to_datetime(start_date)
             start_date = pd.to_datetime(start_date)
             filtered_df = filtered_df[filtered_df['Erwerbsdatum'] >= start_date]
 
@@ -528,7 +529,8 @@ class GUIApp:
 
         elif view == "Regionsanalyse":
             # Draw bar chart for Regionsanalyse
-            self.draw_bar_chart()
+            filtered_df = self.apply_filters_Region()
+            self.draw_bar_chart(filtered_df)
 
 
 
@@ -581,28 +583,31 @@ class GUIApp:
             canvas.draw()
             canvas.get_tk_widget().pack()
 
-    def draw_bar_chart(self):
+    def draw_bar_chart(self, filtered_df):
         # Clear existing content in chart_frame
         for widget in self.chart_frame.winfo_children():
             widget.destroy()
 
-        # Example data for a bar chart
-        categories = ['Category A', 'Category B', 'Category C', 'Category D', 'Category E']
-        values = [15, 24, 10, 30, 18]
+        # Group the data by 'PLZ' and calculate the mean of 'Kaufpreis €'
+        grouped_data = filtered_df.groupby('PLZ')['Kaufpreis €'].mean()
+
+        # PLZ (districts) and their average prices
+        districts = grouped_data.index
+        avg_prices = grouped_data.values
 
         # Create a figure and axis
         fig, ax = plt.subplots()
 
         # Plot the bar chart
-        ax.bar(categories, values, label='Bar Chart')
+        ax.bar(districts, avg_prices, color='skyblue')
 
         # Set labels and title
-        ax.set_xlabel('Categories')
-        ax.set_ylabel('Values')
-        ax.set_title('Bar Chart Example')
+        ax.set_xlabel('Bezirk (PLZ)')
+        ax.set_ylabel('Durchschnittlicher Kaufpreis €')
+        ax.set_title('Durchschnittliche Kaufpreise pro Bezirk')
 
-        # Add a legend
-        ax.legend()
+        # Rotate x-axis labels for better readability
+        plt.xticks(rotation=45)
 
         # Embed the chart in the Tkinter window
         canvas = FigureCanvasTkAgg(fig, master=self.chart_frame)
