@@ -352,6 +352,7 @@ class GUIApp:
         bis_month = self.bis_month_dropdown.get()
         bis_year = self.bis_year_dropdown.get()
         selected_zuordnung = self.zuordnung_dropdown.get()  # Get the selected Zuordnung
+        selected_preis = self.preis_dropdown.get()
 
         # Umwandlung der Werte in ein Datumsformat
         start_date = f"{von_year}-{self.month_to_number(von_month)}-01" if von_month != 'Monat auswählen' else None
@@ -362,16 +363,17 @@ class GUIApp:
         if selected_zuordnung != 'Zuordnung auswählen':
             filtered_df = filtered_df[filtered_df['zuordnung'] == selected_zuordnung]
 
-
-        # Zeichnen des Stadtplans mit dem gefilterten DataFrame
-        self.draw_stadtPlan(filtered_df)
-
+        if selected_preis == 'relativ':
+            self.draw_stadtPlanRelativ(filtered_df)
+        else:
+            # Zeichnen des Stadtplans mit dem gefilterten DataFrame
+            self.draw_stadtPlan(filtered_df)
         # Optionale Ausgabe zur Überprüfung
         print("Filtered Data:")
         print(filtered_df)
         return filtered_df
 
-    def draw_stadtPlan(self, filtered_df):
+    def draw_stadtPlanRelativ(self, filtered_df):
         # Clear existing content in chart_frame
         for widget in self.chart_frame.winfo_children():
             widget.destroy()
@@ -388,9 +390,109 @@ class GUIApp:
 
         # Set current position and zoom to Wien
         map_widget.set_position(48.2082, 16.3738, marker=False)  # Vienna, Austria
-        map_widget.set_zoom(12)
+        map_widget.set_zoom(11)
 
         print(filtered_df)
+
+        # Create a legend dictionary for color mapping
+        legend_mapping = {
+            "lightgreen": "Preis pro m² <= 300",
+            "yellow": "300 < Preis pro m² <= 600",
+            "red": "Preis pro m² > 600",
+            "lightgrey": "Nicht genügend gütlige Daten vorhanden"
+        }
+
+        # Create a legend on the map
+        legend_frame = tk.Frame(self.chart_frame, bg="white")
+        legend_frame.pack(side="bottom", fill="x", pady=10, padx=10)
+
+        for color, label in legend_mapping.items():
+            legend_label = tk.Label(legend_frame, text=label, bg=color)
+            legend_label.pack(side="left", padx=5)
+
+        def polygon_click(polygon):
+            print(f"polygon clicked - text: {polygon.name}")
+
+        # Iterate over all districts
+        for bezirk_number in gdf['BEZNR'].unique():
+            # Extract coordinates for the current district
+            district_geometry = gdf[gdf['BEZNR'] == bezirk_number]['geometry'].iloc[0]
+            coordinates = list(district_geometry.exterior.coords)
+
+            # Convert coordinates to latitude and longitude
+            district_polygon = [(y, x) for x, y in coordinates]
+
+            # Get the PLZ corresponding to the BEZNR
+            plz_for_bezirk = bezirk_number * 10 + 1000;
+
+            # Convert 'BEZNR' to string before concatenation
+            # plz_for_bezirk = str(plz_for_bezirk)
+
+            # Calculate median 'Kaufpreis €' for the current district
+            district_median_price = filtered_df[filtered_df['PLZ'] == plz_for_bezirk]['€/m² Gfl.'].median()
+
+            print(plz_for_bezirk)
+            print(bezirk_number)
+            print(district_median_price)
+            # Set fill and border colors based on median 'Kaufpreis €'
+            if 0 < district_median_price <= 300:
+                fill_color = "lightgreen"
+                outline_color = "green"
+            elif 200 < district_median_price <= 600:
+                fill_color = "yellow"
+                outline_color = "orange"
+            elif district_median_price > 600:
+                fill_color = "red"
+                outline_color = "red"
+            else:
+                fill_color = "lightgrey"
+                outline_color = "grey"
+
+            # Set a polygon for the current district
+            district_name = f"district_{bezirk_number}_polygon"
+            map_widget.set_polygon(district_polygon, fill_color=fill_color, outline_color=outline_color,
+                                   border_width=2, command=polygon_click, name=district_name)
+
+
+
+    def draw_stadtPlan(self, filtered_df):
+
+
+        # Clear existing content in chart_frame
+        for widget in self.chart_frame.winfo_children():
+            widget.destroy()
+        # Read the GeoJSON file into a GeoDataFrame
+        gdf = gpd.read_file('../data/raw/BEZIRKSGRENZEOGDPolygon.geojson')
+
+        # Embed the map view in the Tkinter window
+        map_widget = tkintermapview.TkinterMapView(self.chart_frame, width=800, height=600, corner_radius=0)
+        map_widget.pack(fill="both", expand=True)
+
+        # Set Wien tile server
+        map_widget.set_tile_server(
+            "https://maps.wien.gv.at/basemap/geolandbasemap/normal/google3857/{z}/{y}/{x}.png", max_zoom=22)
+
+        # Set current position and zoom to Wien
+        map_widget.set_position(48.2082, 16.3738, marker=False)  # Vienna, Austria
+        map_widget.set_zoom(11)
+
+        print(filtered_df)
+
+        # Create a legend dictionary for color mapping
+        legend_mapping = {
+            "lightgreen": "absoluter Kaufpreis <= 300,000",
+            "yellow": "300,000 < absoluter Kaufpreis <= 500,000",
+            "red": "absoluter Kaufpreis > 500,000",
+            "lightgrey": "Nicht genügend gütlige Daten vorhanden"
+        }
+
+        # Create a legend on the map
+        legend_frame = tk.Frame(self.chart_frame, bg="white")
+        legend_frame.pack(side="bottom", fill="x", pady=10, padx=10)
+
+        for color, label in legend_mapping.items():
+            legend_label = tk.Label(legend_frame, text=label, bg=color)
+            legend_label.pack(side="left", padx=5)
 
         def polygon_click(polygon):
             print(f"polygon clicked - text: {polygon.name}")
@@ -434,6 +536,8 @@ class GUIApp:
             district_name = f"district_{bezirk_number}_polygon"
             map_widget.set_polygon(district_polygon, fill_color=fill_color, outline_color=outline_color,
                                    border_width=2, command=polygon_click, name=district_name)
+
+
 
 
     def apply_filters_Region(self):
