@@ -320,13 +320,16 @@ class GUIApp:
         von_year = self.von_year_dropdown.get()
         bis_month = self.bis_month_dropdown.get()
         bis_year = self.bis_year_dropdown.get()
+        selected_zuordnung = self.zuordnung_dropdown.get()  # Get the selected Zuordnung
 
         # Umwandlung der Werte in ein Datumsformat
         start_date = f"{von_year}-{self.month_to_number(von_month)}-01" if von_month != 'Monat auswählen' else None
         end_date = f"{bis_year}-{self.month_to_number(bis_month)}-01" if bis_month != 'Monat auswählen' else None
 
-        # Filtern des DataFrames nach Datum
+        # Filtern des DataFrames nach Datum und Zuordnung
         filtered_df = self.filter_dataframe_by_date(start_date, end_date)
+        if selected_zuordnung != 'Zuordnung auswählen':
+            filtered_df = filtered_df[filtered_df['zuordnung'] == selected_zuordnung]
 
         # Überprüfen, ob der ausgewählte Bezirk gültig ist
         if selected_bezirk not in ['Bezirk auswählen', 'Alle Bezirke']:
@@ -348,13 +351,16 @@ class GUIApp:
         von_year = self.von_year_dropdown.get()
         bis_month = self.bis_month_dropdown.get()
         bis_year = self.bis_year_dropdown.get()
+        selected_zuordnung = self.zuordnung_dropdown.get()  # Get the selected Zuordnung
 
         # Umwandlung der Werte in ein Datumsformat
         start_date = f"{von_year}-{self.month_to_number(von_month)}-01" if von_month != 'Monat auswählen' else None
         end_date = f"{bis_year}-{self.month_to_number(bis_month)}-01" if bis_month != 'Monat auswählen' else None
 
-        # Filtern des DataFrames nach Datum
+        # Filtern des DataFrames nach Datum und Zuordnung
         filtered_df = self.filter_dataframe_by_date(start_date, end_date)
+        if selected_zuordnung != 'Zuordnung auswählen':
+            filtered_df = filtered_df[filtered_df['zuordnung'] == selected_zuordnung]
 
 
         # Zeichnen des Stadtplans mit dem gefilterten DataFrame
@@ -412,10 +418,10 @@ class GUIApp:
             print(district_median_price)
             # Set fill and border colors based on median 'Kaufpreis €'
             if district_median_price <= 300000:
-                fill_color = "green"
+                fill_color = "lightgreen"
                 outline_color = "green"
             elif 300000 < district_median_price <= 500000:
-                fill_color = "orange"
+                fill_color = "yellow"
                 outline_color = "orange"
             else:
                 fill_color = "red"
