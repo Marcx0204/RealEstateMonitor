@@ -417,15 +417,18 @@ class GUIApp:
             print(bezirk_number)
             print(district_median_price)
             # Set fill and border colors based on median 'Kaufpreis €'
-            if district_median_price <= 300000:
+            if 0 < district_median_price <= 300000:
                 fill_color = "lightgreen"
                 outline_color = "green"
             elif 300000 < district_median_price <= 500000:
                 fill_color = "yellow"
                 outline_color = "orange"
-            else:
+            elif district_median_price > 500000:
                 fill_color = "red"
                 outline_color = "red"
+            else:
+                fill_color = "lightgrey"
+                outline_color = "grey"
 
             # Set a polygon for the current district
             district_name = f"district_{bezirk_number}_polygon"
