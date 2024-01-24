@@ -310,35 +310,34 @@ class GUIApp:
             self.bis_year_dropdown.grid(row=7, pady=10, padx=10, sticky="w")
 
     def apply_filters_Preis(self):
-        # Abrufen der ausgewählten Werte aus den Dropdowns
         selected_bezirk = self.bezirk_dropdown.get()
-        # Debugging-Ausgaben
-        print(f"Ausgewählter Bezirk: {selected_bezirk}")
-        print(f"DataFrame vor dem Filtern: {self.df.head()}")
-
         von_month = self.von_month_dropdown.get()
         von_year = self.von_year_dropdown.get()
         bis_month = self.bis_month_dropdown.get()
         bis_year = self.bis_year_dropdown.get()
-        selected_zuordnung = self.zuordnung_dropdown.get()  # Get the selected Zuordnung
+        selected_zuordnung = self.zuordnung_dropdown.get()
 
-        # Umwandlung der Werte in ein Datumsformat
-        start_date = f"{von_year}-{self.month_to_number(von_month)}-01" if von_month != 'Monat auswählen' else None
-        end_date = f"{bis_year}-{self.month_to_number(bis_month)}-01" if bis_month != 'Monat auswählen' else None
+        # Überprüfen und Einstellen der Datumsfilter
+        start_date, end_date = None, None
+        if von_month != 'Monat auswählen' and von_year != 'Jahr auswählen':
+            start_date = f"{von_year}-{self.month_to_number(von_month)}-01"
+        if bis_month != 'Monat auswählen' and bis_year != 'Jahr auswählen':
+            end_date = f"{bis_year}-{self.month_to_number(bis_month)}-01"
 
-        # Filtern des DataFrames nach Datum und Zuordnung
+        # Filtern des DataFrames nach Datum
         filtered_df = self.filter_dataframe_by_date(start_date, end_date)
-        if selected_zuordnung != 'Zuordnung auswählen':
-            filtered_df = filtered_df[filtered_df['zuordnung'] == selected_zuordnung]
 
-        # Überprüfen, ob der ausgewählte Bezirk gültig ist
+        # Filtern nach Bezirk
         if selected_bezirk not in ['Bezirk auswählen', 'Alle Bezirke']:
-            filtered_df = filter_by_zip(self.df, int(selected_bezirk))
+            filtered_df = filter_by_zip(filtered_df, int(selected_bezirk))
+
+        # Filtern nach Zuordnung, falls ausgewählt
+        if selected_zuordnung and selected_zuordnung != 'Zuordnung auswählen':
+            filtered_df = filtered_df[filtered_df['zuordnung'] == selected_zuordnung]
 
         # Zeichnen des Liniendiagramms mit dem gefilterten DataFrame
         self.draw_line_chart(filtered_df)
 
-        # Optionale Ausgabe zur Überprüfung
         print("Filtered Data:")
         print(filtered_df)
         return filtered_df
