@@ -97,7 +97,6 @@ class GUIApp:
         print(f"Das niedrigste Datum ist: {min_date}")
         print(f"Das Jahr vom niedrigsten Datum ist: {min_year}")
 
-
         # Konvertiere die Spalte "Erwerbsdatum" in ein Datetime-Format
         self.df['Erwerbsdatum'] = pd.to_datetime(self.df['Erwerbsdatum'])
         # Finde das niedrigste Datum in der Spalte "Erwerbsdatum"
@@ -162,7 +161,6 @@ class GUIApp:
 
         if view == "Stadtplan":
         # Preis, Zuordnung, Zeitraum
-
 
             # Preis
             self.preis_dropdown = ttk.Combobox(self.filter_frame, values=['absolut', 'relativ'], style="TCombobox", font=dropdown_font)
