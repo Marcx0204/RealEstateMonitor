@@ -252,14 +252,6 @@ class GUIApp:
         elif view == "Regionsanalyse":
         # Bezirk, Filter, Zeitraum
 
-            # Bezirk
-            bezirk_values = sorted(self.df['PLZ'].unique())
-            self.bezirk_dropdown = ttk.Combobox(self.filter_frame,
-                                                values=bezirk_values,
-                                                style="TCombobox", font=dropdown_font)
-            self.bezirk_dropdown.set('Bezirk auswählen')
-            self.bezirk_dropdown.grid(row=0, pady=10, padx=10, sticky="w")
-
             # Zuordnung
             zuordnung_values = sorted(self.df['zuordnung'].unique())
             self.zuordnung_dropdown = ttk.Combobox(self.filter_frame, values=zuordnung_values, style="TCombobox",
