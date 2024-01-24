@@ -214,8 +214,9 @@ class GUIApp:
                                                font=dropdown_font)
             self.preis_dropdown.set('Preis auswählen')
             self.preis_dropdown.grid(row=0, pady=10, padx=10, sticky="w")
+            self.preis_dropdown.bind("<<ComboboxSelected>>", self.preis_dropdown_change)
 
-            # Bezirk
+        # Bezirk
             bezirk_values = ['Alle Bezirke'] + sorted(self.df['PLZ'].unique())
             self.bezirk_dropdown = ttk.Combobox(self.filter_frame,
                                                 values=bezirk_values,
@@ -309,6 +310,24 @@ class GUIApp:
             self.bis_year_dropdown.set('Jahr auswählen')
             self.bis_year_dropdown.grid(row=7, pady=10, padx=10, sticky="w")
 
+    def preis_dropdown_change(self, event):
+        # Füge hier deine Logik für die Behandlung der Auswahländerung hinzu
+        selected_value = self.preis_dropdown.get()
+        if selected_value == 'relativ':
+            # Deaktiviere andere Dropdowns oder führe andere Aktionen aus
+            self.zuordnung_dropdown['state'] = 'disabled'
+            self.von_month_dropdown['state'] = 'disabled'
+            self.von_year_dropdown['state'] = 'disabled'
+            self.bis_month_dropdown['state'] = 'disabled'
+            self.bis_year_dropdown['state'] = 'disabled'
+        else:
+            # Aktiviere die Dropdowns, wenn der Preis nicht relativ ist
+            self.zuordnung_dropdown['state'] = 'normal'
+            self.von_month_dropdown['state'] = 'normal'
+            self.von_year_dropdown['state'] = 'normal'
+            self.bis_month_dropdown['state'] = 'normal'
+            self.bis_year_dropdown['state'] = 'normal'
+
     def apply_filters_Preis(self):
         selected_bezirk = self.bezirk_dropdown.get()
         von_month = self.von_month_dropdown.get()
@@ -316,6 +335,7 @@ class GUIApp:
         bis_month = self.bis_month_dropdown.get()
         bis_year = self.bis_year_dropdown.get()
         selected_zuordnung = self.zuordnung_dropdown.get()
+        selected_preis = self.preis_dropdown.get()
 
         # Überprüfen und Einstellen der Datumsfilter
         start_date, end_date = None, None
@@ -335,12 +355,87 @@ class GUIApp:
         if selected_zuordnung and selected_zuordnung != 'Zuordnung auswählen':
             filtered_df = filtered_df[filtered_df['zuordnung'] == selected_zuordnung]
 
-        # Zeichnen des Liniendiagramms mit dem gefilterten DataFrame
-        self.draw_line_chart(filtered_df)
+        if selected_preis == 'relativ':
+            # Zeichnen des Liniendiagramms mit dem gefilterten DataFrame mit relativen Preisen
+            self.draw_lineChart_relativ(filtered_df)
+        else:
+            # Zeichnen des Liniendiagramms mit dem gefilterten DataFrame mit absoluten Preisen
+            self.draw_lineChart_absolut(filtered_df)
 
+        # Optionale Ausgabe zur Überprüfung
         print("Filtered Data:")
         print(filtered_df)
         return filtered_df
+
+    def draw_lineChart_relativ(self, filtered_df):
+
+        for widget in self.chart_frame.winfo_children():
+            widget.destroy()
+
+        # Stellen Sie sicher, dass der DataFrame die notwendigen Spalten enthält
+        if 'Erwerbsdatum' in filtered_df.columns and '€/m² Gfl.' in filtered_df.columns:
+            # Extrahieren Sie die Daten für die X- und y-Achse
+            x_values = pd.to_datetime(filtered_df['Erwerbsdatum'])
+            # Gruppieren Sie die Daten nach Jahr (oder Monat) und berechnen Sie den Durchschnittspreis
+            df_grouped = filtered_df[filtered_df['€/m² Gfl.'] > 0].groupby(filtered_df['Erwerbsdatum'].dt.year)['€/m² Gfl.'].mean()
+
+            # Erstellen Sie die X- und Y-Werte für das Diagramm
+            x_values = df_grouped.index
+            y_values = df_grouped.values
+
+            # Erstellen Sie eine Figur und eine Achse
+            fig, ax = plt.subplots()
+
+            # Zeichnen Sie das Liniendiagramm
+            ax.plot(x_values, y_values, label='Durchschnittlicher Preis')
+
+            # Setzen Sie Beschriftungen und Titel
+            ax.set_xlabel('Erwerbsdatum')
+            ax.set_ylabel('Durchschnittspreis in €')
+            ax.set_title('Durchschnittliche Preisentwicklung über Zeit')
+
+            # Fügen Sie eine Legende hinzu
+            ax.legend()
+
+            # Binden Sie das Diagramm in das Tkinter-Fenster ein
+            canvas = FigureCanvasTkAgg(fig, master=self.chart_frame)
+            canvas.draw()
+            canvas.get_tk_widget().pack()
+
+    def draw_lineChart_absolut(self, filtered_df):
+        for widget in self.chart_frame.winfo_children():
+            widget.destroy()
+
+        # Stellen Sie sicher, dass der DataFrame die notwendigen Spalten enthält
+        if 'Erwerbsdatum' in filtered_df.columns and 'Kaufpreis €' in filtered_df.columns:
+            # Extrahieren Sie die Daten für die X- und y-Achse
+            x_values = pd.to_datetime(filtered_df['Erwerbsdatum'])
+            # Gruppieren Sie die Daten nach Jahr (oder Monat) und berechnen Sie den Durchschnittspreis
+            df_grouped = filtered_df.groupby(filtered_df['Erwerbsdatum'].dt.year)['Kaufpreis €'].median()
+
+            # Erstellen Sie die X- und Y-Werte für das Diagramm
+            x_values = df_grouped.index
+            y_values = df_grouped.values
+
+            # Erstellen Sie eine Figur und eine Achse
+            fig, ax = plt.subplots()
+
+            # Zeichnen Sie das Liniendiagramm
+            ax.plot(x_values, y_values, label='Mittlerer absoluter Preis')
+
+            # Setzen Sie Beschriftungen und Titel
+            ax.set_xlabel('Erwerbsdatum')
+            ax.set_ylabel('Mittlerer absoluter Preis in €')
+            ax.set_title('Durchschnittliche Preisentwicklung über Zeit')
+
+            # Fügen Sie eine Legende hinzu
+            ax.legend()
+
+            # Binden Sie das Diagramm in das Tkinter-Fenster ein
+            canvas = FigureCanvasTkAgg(fig, master=self.chart_frame)
+            canvas.draw()
+            canvas.get_tk_widget().pack()
+
 
     def apply_filters_Stadtplan(self):
         # Abrufen der ausgewählten Werte aus den Dropdowns
@@ -455,7 +550,6 @@ class GUIApp:
 
 
     def draw_stadtPlan(self, filtered_df):
-
 
         # Clear existing content in chart_frame
         for widget in self.chart_frame.winfo_children():
@@ -657,41 +751,6 @@ class GUIApp:
 
         # Return the fill color for the given district number, defaulting to a color if not found in the mapping
         return district_color_mapping.get(district_number, "blue")
-
-    def draw_line_chart(self, filtered_df):
-
-        for widget in self.chart_frame.winfo_children():
-            widget.destroy()
-
-        # Stellen Sie sicher, dass der DataFrame die notwendigen Spalten enthält
-        if 'Erwerbsdatum' in filtered_df.columns and 'Kaufpreis €' in filtered_df.columns:
-            # Extrahieren Sie die Daten für die X- und y-Achse
-            x_values = pd.to_datetime(filtered_df['Erwerbsdatum'])
-            # Gruppieren Sie die Daten nach Jahr (oder Monat) und berechnen Sie den Durchschnittspreis
-            df_grouped = filtered_df.groupby(filtered_df['Erwerbsdatum'].dt.year)['Kaufpreis €'].mean()
-
-            # Erstellen Sie die X- und Y-Werte für das Diagramm
-            x_values = df_grouped.index
-            y_values = df_grouped.values
-
-            # Erstellen Sie eine Figur und eine Achse
-            fig, ax = plt.subplots()
-
-            # Zeichnen Sie das Liniendiagramm
-            ax.plot(x_values, y_values, label='Durchschnittlicher Preis')
-
-            # Setzen Sie Beschriftungen und Titel
-            ax.set_xlabel('Erwerbsdatum')
-            ax.set_ylabel('Durchschnittspreis in €')
-            ax.set_title('Durchschnittliche Preisentwicklung über Zeit')
-
-            # Fügen Sie eine Legende hinzu
-            ax.legend()
-
-            # Binden Sie das Diagramm in das Tkinter-Fenster ein
-            canvas = FigureCanvasTkAgg(fig, master=self.chart_frame)
-            canvas.draw()
-            canvas.get_tk_widget().pack()
 
     def draw_bar_chart(self):
         # Clear existing content in chart_frame
