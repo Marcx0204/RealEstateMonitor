@@ -396,7 +396,7 @@ class GUIApp:
                 canvas.get_tk_widget().pack()
             else:
                 label = Label(self.chart_frame,
-                              text="Nicht genügend Daten für die Analyse vorhanden (mindestens 10 erforderlich)",
+                              text="Nicht genügend Daten für eine aussagekräftige Analyse vorhanden",
                               font=("Helvetica", 16))
                 label.pack(expand=True)
         else:
@@ -413,7 +413,7 @@ class GUIApp:
                 'Kaufpreis €'].mean().reset_index()
             df_grouped['Erwerbsdatum'] = df_grouped['Erwerbsdatum'].dt.to_timestamp()
 
-            if len(df_grouped) >= 10:
+            if len(df_grouped) >= 9:
                 x_values = df_grouped['Erwerbsdatum']
                 y_values = df_grouped['Kaufpreis €']
 
@@ -442,11 +442,11 @@ class GUIApp:
                 canvas.get_tk_widget().pack()
             else:
                 label = Label(self.chart_frame,
-                              text="Nicht genügend Daten für die Analyse vorhanden (mindestens 10 erforderlich)",
+                              text="Nicht genügend Daten für eine aussagekräftige Analyse vorhanden",
                               font=("Helvetica", 16))
                 label.pack(expand=True)
         else:
-            label = Label(self.chart_frame, text="Zu wenige oder keine Daten zur Analyse vorhanden",
+            label = Label(self.chart_frame, text="Zu keine Daten zur Analyse vorhanden",
                           font=("Helvetica", 16))
             label.pack(expand=True)
 
