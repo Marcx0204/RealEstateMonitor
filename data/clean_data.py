@@ -1,5 +1,14 @@
 import pandas as pd
 from data.raw.read_data import read_data
+from datetime import datetime
+
+def remove_price_outliers(df, column='Kaufpreis €', factor=1.5):
+    Q1 = df[column].quantile(0.25)
+    Q3 = df[column].quantile(0.75)
+    IQR = Q3 - Q1
+    lower_bound = Q1 - factor * IQR
+    upper_bound = Q3 + factor * IQR
+    return df[(df[column] >= lower_bound) & (df[column] <= upper_bound)]
 
 def clean_data():
     df = read_data()
@@ -126,8 +135,11 @@ def clean_data():
     }
 
     # Erstellen einer Liste gültiger PLZ für Wien (inklusive 1230)
-    valid_plz = [str(i) for i in range(1010, 1231)]
-
+    valid_plz = [
+        "1010", "1020", "1030", "1040", "1050", "1060", "1070", "1080", "1090",
+        "1100", "1110", "1120", "1130", "1140", "1150", "1160", "1170", "1180",
+        "1190", "1200", "1210", "1220", "1230"
+    ]
 
     def is_valid_plz(plz):
         return plz in valid_plz
@@ -140,12 +152,13 @@ def clean_data():
             return mapping[kstrlgmnd], True  # Gibt das neue PLZ und ein Flag für die Änderung zurück
         return plz, False  # Keine Änderung, gibt das Flag False zurück
 
-
     # Aktualisieren der PLZ und markieren, wenn Änderungen vorgenommen wurden
     for index, row in df_no_outliers.iterrows():
         new_plz, changed = update_plz_if_invalid(row, katastralgemeinde_plz_mapping, valid_plz)
         df_no_outliers.at[index, 'PLZ'] = new_plz
         # df_no_outliers.at[index, 'PLZ_Changed'] = changed
+
+
 
     # Sicherung des DataFrames vor dem Entfernen von Zeilen
     df_before_removal = df_no_outliers.copy()
@@ -153,7 +166,21 @@ def clean_data():
     # Entfernen der Einträge, die keine gültige PLZ haben
     df_no_outliers = df_no_outliers[df_no_outliers['PLZ'].isin(valid_plz)]
 
-    # Entfernen von Zeilen, wo 'Erwerbsart' oder 'Erwerbsdatum' fehlt
+    # Konvertieren der 'Erwerbsdatum'-Spalte in datetime, Fehler ignorieren und NaT für Fehler setzen
+    df_no_outliers['Erwerbsdatum'] = pd.to_datetime(df_no_outliers['Erwerbsdatum'], errors='coerce')
+
+    # Setzen Sie hier die Grenzen für das gültige Datum fest
+    min_valid_date = pd.to_datetime('1900-01-01')
+    max_valid_date = pd.to_datetime(datetime.now())
+
+    # Entfernen von Zeilen mit ungültigen Daten
+    df_no_outliers = df_no_outliers[(df_no_outliers['Erwerbsdatum'] >= min_valid_date) &
+                                    (df_no_outliers['Erwerbsdatum'] <= max_valid_date)]
+
+    # Entfernen von Ausreißern im 'Kaufpreis €'
+    df_no_outliers = remove_price_outliers(df_no_outliers)
+
+    # Entfernen von Zeilen, wo 'ErwArt' oder 'Erwerbsdatum' fehlen
     df_missing_values = df_no_outliers[df_no_outliers[['ErwArt', 'Erwerbsdatum']].isna().any(axis=1)]
     df_no_outliers = df_no_outliers.dropna(subset=['ErwArt', 'Erwerbsdatum'])
 
@@ -162,4 +189,3 @@ def clean_data():
                             df_missing_values])
 
     return df_no_outliers, df_removed
-

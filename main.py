@@ -45,6 +45,7 @@ def filter_data_by_date():
     # Ausgabe der gefilterten Daten
     display_data(df_filtered)  # Now it works with a DataFrame
 
+
 def filter_data_by_zip():
     zip_code = input("Bitte geben Sie die PLZ ein: ")
 
@@ -76,6 +77,7 @@ def filter_data_by_price():
 
     display_data(df_filtered_by_price)
 
+
 def display_data(data):
     if isinstance(data, pd.DataFrame):
         print(data)
@@ -85,12 +87,6 @@ def display_data(data):
             print(df)
         except FileNotFoundError:
             print(f"Die Datei {data} wurde nicht gefunden. Bitte zuerst die Daten bereinigen und speichern.")
-
-
-
-
-
-
 
 
 def main():
@@ -128,6 +124,7 @@ def main():
             break
         else:
             print("Ungültige Eingabe. Bitte wählen Sie 1, 2, 3, 4, 5, oder 6.")
+
 
 if __name__ == '__main__':
     main()
