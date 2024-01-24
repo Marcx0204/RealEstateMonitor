@@ -6,6 +6,7 @@ import geopandas as gpd
 import matplotlib.pyplot as plt
 from matplotlib.backends.backend_tkagg import FigureCanvasTkAgg
 import tkintermapview
+from tkinter import Label
 from PIL import ImageGrab
 import numpy as np
 import datetime
@@ -404,36 +405,60 @@ class GUIApp:
         for widget in self.chart_frame.winfo_children():
             widget.destroy()
 
-        # Stellen Sie sicher, dass der DataFrame die notwendigen Spalten enthält
         if 'Erwerbsdatum' in filtered_df.columns and 'Kaufpreis €' in filtered_df.columns:
-            # Extrahieren Sie die Daten für die X- und y-Achse
-            x_values = pd.to_datetime(filtered_df['Erwerbsdatum'])
-            # Gruppieren Sie die Daten nach Jahr (oder Monat) und berechnen Sie den Durchschnittspreis
-            df_grouped = filtered_df.groupby(filtered_df['Erwerbsdatum'].dt.year)['Kaufpreis €'].median()
+            df_grouped = filtered_df.groupby(filtered_df['Erwerbsdatum'].dt.to_period('Y'))[
+                'Kaufpreis €'].mean().reset_index()
+            df_grouped['Erwerbsdatum'] = df_grouped['Erwerbsdatum'].dt.to_timestamp()
 
-            # Erstellen Sie die X- und Y-Werte für das Diagramm
-            x_values = df_grouped.index
-            y_values = df_grouped.values
+            if len(df_grouped) >= 10:
+                x_values = df_grouped['Erwerbsdatum']
+                y_values = df_grouped['Kaufpreis €']
 
-            # Erstellen Sie eine Figur und eine Achse
-            fig, ax = plt.subplots()
+                fig, ax = plt.subplots()
+                ax.plot(x_values, y_values, label='Durchschnittlicher Preis')
 
-            # Zeichnen Sie das Liniendiagramm
-            ax.plot(x_values, y_values, label='Mittlerer absoluter Preis')
+                # Setzen Sie Beschriftungen und Titel
+                ax.set_xlabel('Erwerbsdatum')
+                ax.set_ylabel('Durchschnittspreis in €')
+                ax.set_title('Durchschnittliche Preisentwicklung über Zeit')
 
-            # Setzen Sie Beschriftungen und Titel
-            ax.set_xlabel('Erwerbsdatum')
-            ax.set_ylabel('Mittlerer absoluter Preis in €')
-            ax.set_title('Durchschnittliche Preisentwicklung über Zeit')
+                # Fügen Sie eine Legende hinzu
+                ax.legend()
 
-            # Fügen Sie eine Legende hinzu
-            ax.legend()
+                # Anpassung der x-Achsen-Ticks basierend auf der Anzahl der Datenpunkte
+                self.adjust_x_ticks(ax, x_values)
 
-            # Binden Sie das Diagramm in das Tkinter-Fenster ein
-            canvas = FigureCanvasTkAgg(fig, master=self.chart_frame)
-            canvas.draw()
-            canvas.get_tk_widget().pack()
+                canvas = FigureCanvasTkAgg(fig, master=self.chart_frame)
+                canvas.draw()
+                canvas.get_tk_widget().pack()
+            else:
+                label = Label(self.chart_frame,
+                              text="Nicht genügend Daten für die Analyse vorhanden (mindestens 10 erforderlich)",
+                              font=("Helvetica", 16))
+                label.pack(expand=True)
+        else:
+            label = Label(self.chart_frame, text="Zu wenige oder keine Daten zur Analyse vorhanden",
+                          font=("Helvetica", 16))
+            label.pack(expand=True)
 
+    def adjust_x_ticks(self, ax, x_values):
+        # Anzahl der Datenpunkte bestimmen
+        data_points = len(x_values)
+
+        # Frequenz der Ticks auf der x-Achse anpassen
+        if data_points > 20:
+            tick_frequency = 3  # Jedes dritte Jahr
+        elif data_points > 10:
+            tick_frequency = 2  # Jedes zweite Jahr
+        else:
+            tick_frequency = 1  # Jedes Jahr
+
+        # Setzen der Ticks auf der x-Achse
+        ax.xaxis.set_major_locator(mdates.YearLocator(base=tick_frequency))
+        ax.xaxis.set_major_formatter(mdates.DateFormatter('%Y'))
+
+        # Verbesserung der Darstellung auf x-Achse
+        plt.gcf().autofmt_xdate()
 
     def apply_filters_Stadtplan(self):
         # Abrufen der ausgewählten Werte aus den Dropdowns
