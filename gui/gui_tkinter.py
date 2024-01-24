@@ -785,29 +785,42 @@ class GUIApp:
             selected_bezirke = group_ranges[selected_group]
             filtered_df = filtered_df[filtered_df['PLZ'].isin(selected_bezirke)]
 
-            categories = filtered_df['PLZ'].unique()
-            mean_prices = filtered_df.groupby('PLZ')['Kaufpreis €'].mean()
+            if not filtered_df.empty:
+                unique_bezirke = filtered_df['PLZ'].nunique()
+                if unique_bezirke >= 3:  # Mindestens 3 Bezirke für die Analyse
+                    categories = filtered_df['PLZ'].unique()
+                    mean_prices = filtered_df.groupby('PLZ')['Kaufpreis €'].mean()
 
-            # Figur und Achse erstellen
-            fig, ax = plt.subplots()
+                    # Figur und Achse erstellen
+                    fig, ax = plt.subplots()
 
-            # Balkendiagramm und Breite der Balken
-            ax.bar(categories, mean_prices, label='Durchschnittspreis', width=4)
+                    # Balkendiagramm
+                    ax.bar(categories, mean_prices, label='Durchschnittspreis', width=4)
 
-            # Labels
-            ax.set_xlabel('Bezirke')
-            ax.set_ylabel('Durchschnittspreis in €')
-            ax.set_title('Durchschnittlicher Preis pro Bezirk')
+                    # Labels und Titel
+                    ax.set_xlabel('Bezirke')
+                    ax.set_ylabel('Durchschnittspreis in €')
+                    ax.set_title('Durchschnittlicher Preis pro Bezirk')
 
-            # Legende
-            ax.legend()
+                    # Legende
+                    ax.legend()
 
-            # Embed the chart in the Tkinter window
-            canvas = FigureCanvasTkAgg(fig, master=self.chart_frame)
-            canvas.draw()
-            canvas.get_tk_widget().pack()
+                    # Diagramm einbinden
+                    canvas = FigureCanvasTkAgg(fig, master=self.chart_frame)
+                    canvas.draw()
+                    canvas.get_tk_widget().pack()
+                else:
+                    label = Label(self.chart_frame,
+                                  text="Nicht genügend Daten für die Analyse vorhanden (mindestens 3 Bezirke erforderlich)",
+                                  font=("Helvetica", 16))
+                    label.pack(expand=True)
+            else:
+                label = Label(self.chart_frame, text="Keine Daten vorhanden für die ausgewählte Bezirksgruppe",
+                              font=("Helvetica", 16))
+                label.pack(expand=True)
         else:
             print("Invalid Bezirksgruppe selected.")
+
 
 
 if __name__ == "__main__":
