@@ -252,43 +252,51 @@ class GUIApp:
         elif view == "Regionsanalyse":
         # Bezirk, Filter, Zeitraum
 
+            # Bezirke
+            self.group_dropdown = ttk.Combobox(self.filter_frame,
+                                               values=['1010-1060', '1070-1120', '1130-1180', '1190-1230'],
+                                               style="TCombobox", font=dropdown_font)
+            self.group_dropdown.set('Bezirksgruppe auswählen')
+            self.group_dropdown.grid(row=1, pady=5, padx=10, sticky="w")
+
+
             # Zuordnung
             zuordnung_values = sorted(self.df['zuordnung'].unique())
             self.zuordnung_dropdown = ttk.Combobox(self.filter_frame, values=zuordnung_values, style="TCombobox",
                                                    font=dropdown_font)
             self.zuordnung_dropdown.set('Zuordnung auswählen')  # Set the initial value
-            self.zuordnung_dropdown.grid(row=1, pady=10, padx=10, sticky="w")
+            self.zuordnung_dropdown.grid(row=2, pady=10, padx=10, sticky="w")
 
             # Zeitraum
             # Dropdowns für "Von: Monat und Jahr"
             von_label = tk.Label(self.filter_frame, text="Von:", font=dropdown_font)
-            von_label.grid(row=2, pady=5, padx=10, sticky="w")
+            von_label.grid(row=3, pady=5, padx=10, sticky="w")
 
             self.von_month_dropdown = ttk.Combobox(self.filter_frame, values=['Jan', 'Feb', 'Mar', 'Apr', 'Mai', 'Jun',
                                                                          'Jul', 'Aug', 'Sep', 'Okt', 'Nov', 'Dez'],
                                               style="TCombobox", font=dropdown_font)
             self.von_month_dropdown.set('Monat auswählen')
-            self.von_month_dropdown.grid(row=3, pady=5, padx=10, sticky="w")
+            self.von_month_dropdown.grid(row=4, pady=5, padx=10, sticky="w")
 
             self.von_year_dropdown = ttk.Combobox(self.filter_frame, values=list(range(min_year, max_year)),
                                              style="TCombobox", font=dropdown_font)
             self.von_year_dropdown.set('Jahr auswählen')
-            self.von_year_dropdown.grid(row=4, pady=5, padx=10, sticky="w")
+            self.von_year_dropdown.grid(row=5, pady=5, padx=10, sticky="w")
 
             # Dropdowns für "Bis: Monat und Jahr"
             bis_label = tk.Label(self.filter_frame, text="Bis:", font=dropdown_font)
-            bis_label.grid(row=5, pady=5, padx=10, sticky="w")
+            bis_label.grid(row=6, pady=5, padx=10, sticky="w")
 
             self.bis_month_dropdown = ttk.Combobox(self.filter_frame, values=['Jan', 'Feb', 'Mar', 'Apr', 'Mai', 'Jun',
                                                                          'Jul', 'Aug', 'Sep', 'Okt', 'Nov', 'Dez'],
                                               style="TCombobox", font=dropdown_font)
             self.bis_month_dropdown.set('Monat auswählen')
-            self.bis_month_dropdown.grid(row=6, pady=5, padx=10, sticky="w")
+            self.bis_month_dropdown.grid(row=7, pady=5, padx=10, sticky="w")
 
             self.bis_year_dropdown = ttk.Combobox(self.filter_frame, values=list(range(min_year, max_year)),
                                              style="TCombobox", font=dropdown_font)
             self.bis_year_dropdown.set('Jahr auswählen')
-            self.bis_year_dropdown.grid(row=7, pady=10, padx=10, sticky="w")
+            self.bis_year_dropdown.grid(row=8, pady=10, padx=10, sticky="w")
 
     def preis_dropdown_change(self, event):
         # Füge hier deine Logik für die Behandlung der Auswahländerung hinzu
@@ -753,33 +761,54 @@ class GUIApp:
         # Return the fill color for the given district number, defaulting to a color if not found in the mapping
         return district_color_mapping.get(district_number, "blue")
 
-    def draw_bar_chart(self, filtered_df):
+    def draw_bar_chart(self, original_df):
         # Clear existing content in chart_frame
         for widget in self.chart_frame.winfo_children():
             widget.destroy()
 
-        # Example data for a bar chart
-        categories = filtered_df['PLZ'].unique()
-        mean_prices = filtered_df.groupby('PLZ')['Kaufpreis €'].mean()
+        # Get the selected Bezirksgruppe from the dropdown
+        selected_group = self.group_dropdown.get()
 
-        # Create a figure and axis
-        fig, ax = plt.subplots()
+        # Define the ranges for each group
+        group_ranges = {
+            '1010-1060': list(range(1010, 1061)),
+            '1070-1120': list(range(1070, 1121)),
+            '1130-1180': list(range(1130, 1181)),
+            '1190-1230': list(range(1190, 1231)),
+        }
 
-        # Plot the bar chart
-        ax.bar(categories, mean_prices, label='Durschnittspreis')
+        # Kopie des originalen DataFrames
+        filtered_df = original_df.copy()
 
-        # Set labels and title
-        ax.set_xlabel('Bezirke')
-        ax.set_ylabel('Durchschnittspreis in €')
-        ax.set_title('Durchschnittlicher Preis pro Bezirk')
+        # Filter DataFrame nach Bezirksgruppe
+        if selected_group in group_ranges:
+            selected_bezirke = group_ranges[selected_group]
+            filtered_df = filtered_df[filtered_df['PLZ'].isin(selected_bezirke)]
 
-        # Add a legend
-        ax.legend()
+            categories = filtered_df['PLZ'].unique()
+            mean_prices = filtered_df.groupby('PLZ')['Kaufpreis €'].mean()
 
-        # Embed the chart in the Tkinter window
-        canvas = FigureCanvasTkAgg(fig, master=self.chart_frame)
-        canvas.draw()
-        canvas.get_tk_widget().pack()
+            # Figur und Achse erstellen
+            fig, ax = plt.subplots()
+
+            # Balkendiagramm und Breite der Balken
+            ax.bar(categories, mean_prices, label='Durchschnittspreis', width=4)
+
+            # Labels
+            ax.set_xlabel('Bezirke')
+            ax.set_ylabel('Durchschnittspreis in €')
+            ax.set_title('Durchschnittlicher Preis pro Bezirk')
+
+            # Legende
+            ax.legend()
+
+            # Embed the chart in the Tkinter window
+            canvas = FigureCanvasTkAgg(fig, master=self.chart_frame)
+            canvas.draw()
+            canvas.get_tk_widget().pack()
+        else:
+            print("Invalid Bezirksgruppe selected.")
+
 
 if __name__ == "__main__":
     root = tk.Tk()
