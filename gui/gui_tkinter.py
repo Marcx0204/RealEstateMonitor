@@ -640,10 +640,6 @@ class GUIApp:
 
 
     def apply_filters_Region(self):
-        # Abrufen der ausgewählten Werte aus den Dropdowns
-        selected_bezirk = self.bezirk_dropdown.get()
-        # Debugging-Ausgaben
-        print(f"Ausgewählter Bezirk: {selected_bezirk}")
         print(f"DataFrame vor dem Filtern: {self.df.head()}")
 
         von_month = self.von_month_dropdown.get()
@@ -657,10 +653,6 @@ class GUIApp:
 
         # Filtern des DataFrames nach Datum
         filtered_df = self.filter_dataframe_by_date(start_date, end_date)
-
-        # Überprüfen, ob der ausgewählte Bezirk gültig ist
-        if selected_bezirk not in ['Bezirk auswählen', 'Alle Bezirke']:
-            filtered_df = filter_by_zip(self.df, int(selected_bezirk))
 
         # Zeichnen des Liniendiagramms mit dem gefilterten DataFrame
         self.draw_bar_chart()
