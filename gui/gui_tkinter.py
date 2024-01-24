@@ -61,7 +61,7 @@ class GUIApp:
         self.root.grid_columnconfigure(2, weight=1)  # Column 2 will expand horizontally
         self.root.grid_rowconfigure(1, weight=1)  # Row 1 will expand vertically
 
-        # Create buttons for Stadtplan, Preisvergleich, and Regionsanalyse
+        # Create buttons for Stadtplan, Preisentwicklung, and Regionsanalyse
         stadtplan_button = ttk.Button(navigation_frame, text="Stadtplan", command=lambda: self.create_content("Stadtplan"),
                                       style="TButton")  # Added style
         stadtplan_button.pack(pady=10)
@@ -269,14 +269,14 @@ class GUIApp:
                                                 values=bezirk_values,
                                                 style="TCombobox", font=dropdown_font)
             self.bezirk_dropdown.set('Bezirk auswählen')
-            self.bezirk_dropdown.grid(row=1, pady=10, padx=10, sticky="w")
+            self.bezirk_dropdown.grid(row=0, pady=10, padx=10, sticky="w")
 
-            # Filter
-            self.filter_dropdown = ttk.Combobox(self.filter_frame,
-                                                values=['Zuordnung', 'Erwerbsart', 'Bausperre'],
-                                                style="TCombobox", font=dropdown_font)
-            self.filter_dropdown.set('Filter auswählen')
-            self.filter_dropdown.grid(row=1, pady=10, padx=10, sticky="w")
+            # Zuordnung
+            zuordnung_values = sorted(self.df['zuordnung'].unique())
+            self.zuordnung_dropdown = ttk.Combobox(self.filter_frame, values=zuordnung_values, style="TCombobox",
+                                                   font=dropdown_font)
+            self.zuordnung_dropdown.set('Zuordnung auswählen')  # Set the initial value
+            self.zuordnung_dropdown.grid(row=1, pady=10, padx=10, sticky="w")
 
             # Zeitraum
             # Dropdowns für "Von: Monat und Jahr"
@@ -563,7 +563,7 @@ class GUIApp:
             filtered_df = filter_by_zip(self.df, int(selected_bezirk))
 
         # Zeichnen des Liniendiagramms mit dem gefilterten DataFrame
-        self.draw_bar_chart(filtered_df)
+        self.draw_bar_chart()
 
         # Optionale Ausgabe zur Überprüfung
         print("Filtered Data:")
@@ -579,7 +579,6 @@ class GUIApp:
         filtered_df['Erwerbsdatum'] = pd.to_datetime(filtered_df['Erwerbsdatum'], errors='coerce')
 
         if start_date:
-            start_date = pd.to_datetime(start_date)
             start_date = pd.to_datetime(start_date)
             filtered_df = filtered_df[filtered_df['Erwerbsdatum'] >= start_date]
 
@@ -641,8 +640,7 @@ class GUIApp:
 
         elif view == "Regionsanalyse":
             # Draw bar chart for Regionsanalyse
-            filtered_df = self.apply_filters_Region()
-            self.draw_bar_chart(filtered_df)
+            self.draw_bar_chart()
 
 
 
@@ -695,31 +693,28 @@ class GUIApp:
             canvas.draw()
             canvas.get_tk_widget().pack()
 
-    def draw_bar_chart(self, filtered_df):
+    def draw_bar_chart(self):
         # Clear existing content in chart_frame
         for widget in self.chart_frame.winfo_children():
             widget.destroy()
 
-        # Group the data by 'PLZ' and calculate the mean of 'Kaufpreis €'
-        grouped_data = filtered_df.groupby('PLZ')['Kaufpreis €'].mean()
-
-        # PLZ (districts) and their average prices
-        districts = grouped_data.index
-        avg_prices = grouped_data.values
+        # Example data for a bar chart
+        categories = ['Category A', 'Category B', 'Category C', 'Category D', 'Category E']
+        values = [15, 24, 10, 30, 18]
 
         # Create a figure and axis
         fig, ax = plt.subplots()
 
         # Plot the bar chart
-        ax.bar(districts, avg_prices, color='skyblue')
+        ax.bar(categories, values, label='Bar Chart')
 
         # Set labels and title
-        ax.set_xlabel('Bezirk (PLZ)')
-        ax.set_ylabel('Durchschnittlicher Kaufpreis €')
-        ax.set_title('Durchschnittliche Kaufpreise pro Bezirk')
+        ax.set_xlabel('Categories')
+        ax.set_ylabel('Values')
+        ax.set_title('Bar Chart Example')
 
-        # Rotate x-axis labels for better readability
-        plt.xticks(rotation=45)
+        # Add a legend
+        ax.legend()
 
         # Embed the chart in the Tkinter window
         canvas = FigureCanvasTkAgg(fig, master=self.chart_frame)
