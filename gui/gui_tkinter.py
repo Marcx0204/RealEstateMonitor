@@ -12,6 +12,7 @@ import datetime
 import matplotlib.dates as mdates
 from tkinter import filedialog, messagebox
 import os
+from tkinter import Label
 
 from data.filter_data import filter_by_zip
 
@@ -175,7 +176,7 @@ class GUIApp:
 
             # Zeitraum
             # Dropdowns für "Von: Monat und Jahr"
-            von_label = tk.Label(self.filter_frame, text="Von:", font=dropdown_font)
+            von_label = tk.Label(self.filter_frame, text="Von: ", font=dropdown_font)
             von_label.grid(row=2, pady=5, padx=10, sticky="w")
 
             self.von_month_dropdown = ttk.Combobox(self.filter_frame, values=['Jan', 'Feb', 'Mar', 'Apr', 'Mai', 'Jun',
@@ -366,73 +367,156 @@ class GUIApp:
         return filtered_df
 
     def draw_lineChart_relativ(self, filtered_df):
-
         for widget in self.chart_frame.winfo_children():
             widget.destroy()
 
-        # Stellen Sie sicher, dass der DataFrame die notwendigen Spalten enthält
-        if 'Erwerbsdatum' in filtered_df.columns and '€/m² Gfl.' in filtered_df.columns:
-            # Extrahieren Sie die Daten für die X- und y-Achse
-            x_values = pd.to_datetime(filtered_df['Erwerbsdatum'])
-            # Gruppieren Sie die Daten nach Jahr (oder Monat) und berechnen Sie den Durchschnittspreis
-            df_grouped = filtered_df[filtered_df['€/m² Gfl.'] > 0].groupby(filtered_df['Erwerbsdatum'].dt.year)['€/m² Gfl.'].mean()
+        if not filtered_df.empty and 'Erwerbsdatum' in filtered_df.columns and 'Kaufpreis €' in filtered_df.columns:
+            # Filterung und Gruppierung der Daten
+            df_grouped = filtered_df.groupby(filtered_df['Erwerbsdatum'].dt.to_period('Y'))[                    'Kaufpreis €'].mean().reset_index()
+            df_grouped['Erwerbsdatum'] = df_grouped['Erwerbsdatum'].dt.to_timestamp()
 
-            # Erstellen Sie die X- und Y-Werte für das Diagramm
-            x_values = df_grouped.index
-            y_values = df_grouped.values
+            if len(df_grouped) >= 10:
+                x_values = df_grouped['Erwerbsdatum']
+                y_values = df_grouped['Kaufpreis €']
 
-            # Erstellen Sie eine Figur und eine Achse
-            fig, ax = plt.subplots()
+                fig, ax = plt.subplots()
+                ax.plot(x_values, y_values, label='Durchschnittlicher Preis')
 
-            # Zeichnen Sie das Liniendiagramm
-            ax.plot(x_values, y_values, label='Durchschnittlicher Preis')
+                # Anzahl der Datenpunkte bestimmen
+                data_points = len(df_grouped)
 
-            # Setzen Sie Beschriftungen und Titel
-            ax.set_xlabel('Erwerbsdatum')
-            ax.set_ylabel('Durchschnittspreis in €')
-            ax.set_title('Durchschnittliche Preisentwicklung über Zeit')
+                # Frequenz der Ticks auf der x-Achse anpassen
+                if data_points > 20:
+                    ax.xaxis.set_major_locator(mdates.YearLocator(base=3))  # Jedes dritte Jahr
+                elif data_points > 10:
+                    ax.xaxis.set_major_locator(mdates.YearLocator(base=2))  # Jedes zweite Jahr
+                else:
+                    ax.xaxis.set_major_locator(mdates.YearLocator(base=1))  # Jedes Jahr
 
-            # Fügen Sie eine Legende hinzu
-            ax.legend()
+                ax.xaxis.set_major_formatter(mdates.DateFormatter('%Y'))
 
-            # Binden Sie das Diagramm in das Tkinter-Fenster ein
-            canvas = FigureCanvasTkAgg(fig, master=self.chart_frame)
-            canvas.draw()
-            canvas.get_tk_widget().pack()
+                # Verbesserung der Darstellung auf x-Achse
+                fig.autofmt_xdate()
+
+                ax.set_xlabel('Erwerbsdatum')
+                ax.set_ylabel('Durchschnittspreis in €')
+                ax.set_title('Durchschnittliche Preisentwicklung über Zeit')
+                ax.legend()
+
+                canvas = FigureCanvasTkAgg(fig, master=self.chart_frame)
+                canvas.draw()
+                canvas.get_tk_widget().pack()
+            else:
+                label = Label(self.chart_frame,
+                    text="Nicht genügend Daten für die Analyse vorhanden (mindestens 10 erforderlich)",
+                    font=("Helvetica", 16))
+                label.pack(expand=True)
+        else:
+            label = Label(self.chart_frame, text="Zu wenige oder keine Daten zur Analyse vorhanden",
+                  font=("Helvetica", 16))
+            label.pack(expand=True)
+
+    def draw_lineChart_relativ(self, filtered_df):
+        for widget in self.chart_frame.winfo_children():
+            widget.destroy()
+
+        if not filtered_df.empty and 'Erwerbsdatum' in filtered_df.columns and '€/m² Gfl.' in filtered_df.columns:
+            # Filterung und Gruppierung der Daten
+            df_grouped = filtered_df[filtered_df['€/m² Gfl.'] > 0].groupby(filtered_df['Erwerbsdatum'].dt.to_period('Y'))[
+                '€/m² Gfl.'].mean().reset_index()
+            df_grouped['Erwerbsdatum'] = df_grouped['Erwerbsdatum'].dt.to_timestamp()
+
+            if len(df_grouped) >= 10:
+                x_values = df_grouped['Erwerbsdatum']
+                y_values = df_grouped['€/m² Gfl.']
+
+                fig, ax = plt.subplots()
+                ax.plot(x_values, y_values, label='Durchschnittlicher Preis')
+
+                # Anzahl der Datenpunkte bestimmen
+                data_points = len(df_grouped)
+
+                # Frequenz der Ticks auf der x-Achse anpassen
+                if data_points > 20:
+                    ax.xaxis.set_major_locator(mdates.YearLocator(base=3))  # Jedes dritte Jahr
+                elif data_points > 10:
+                    ax.xaxis.set_major_locator(mdates.YearLocator(base=2))  # Jedes zweite Jahr
+                else:
+                    ax.xaxis.set_major_locator(mdates.YearLocator(base=1))  # Jedes Jahr
+
+                ax.xaxis.set_major_formatter(mdates.DateFormatter('%Y'))
+
+                # Verbesserung der Darstellung auf x-Achse
+                fig.autofmt_xdate()
+
+                ax.set_xlabel('Erwerbsdatum')
+                ax.set_ylabel('Durchschnittspreis in €')
+                ax.set_title('Durchschnittliche Preisentwicklung über Zeit')
+                ax.legend()
+
+                canvas = FigureCanvasTkAgg(fig, master=self.chart_frame)
+                canvas.draw()
+                canvas.get_tk_widget().pack()
+            else:
+                label = Label(self.chart_frame,
+                              text="Nicht genügend Daten für die Analyse vorhanden (mindestens 10 erforderlich)",
+                              font=("Helvetica", 16))
+                label.pack(expand=True)
+        else:
+            label = Label(self.chart_frame, text="Zu wenige oder keine Daten zur Analyse vorhanden",
+                          font=("Helvetica", 16))
+            label.pack(expand=True)
 
     def draw_lineChart_absolut(self, filtered_df):
         for widget in self.chart_frame.winfo_children():
             widget.destroy()
 
-        # Stellen Sie sicher, dass der DataFrame die notwendigen Spalten enthält
-        if 'Erwerbsdatum' in filtered_df.columns and 'Kaufpreis €' in filtered_df.columns:
-            # Extrahieren Sie die Daten für die X- und y-Achse
-            x_values = pd.to_datetime(filtered_df['Erwerbsdatum'])
-            # Gruppieren Sie die Daten nach Jahr (oder Monat) und berechnen Sie den Durchschnittspreis
-            df_grouped = filtered_df.groupby(filtered_df['Erwerbsdatum'].dt.year)['Kaufpreis €'].median()
+        if not filtered_df.empty and 'Erwerbsdatum' in filtered_df.columns and 'Kaufpreis €' in filtered_df.columns:
+            # Filterung und Gruppierung der Daten
+            df_grouped = filtered_df.groupby(filtered_df['Erwerbsdatum'].dt.to_period('Y'))[
+                'Kaufpreis €'].mean().reset_index()
+            df_grouped['Erwerbsdatum'] = df_grouped['Erwerbsdatum'].dt.to_timestamp()
 
-            # Erstellen Sie die X- und Y-Werte für das Diagramm
-            x_values = df_grouped.index
-            y_values = df_grouped.values
+            if len(df_grouped) >= 10:
+                x_values = df_grouped['Erwerbsdatum']
+                y_values = df_grouped['Kaufpreis €']
 
-            # Erstellen Sie eine Figur und eine Achse
-            fig, ax = plt.subplots()
+                fig, ax = plt.subplots()
+                ax.plot(x_values, y_values, label='Mittlerer absoluter Preis')
 
-            # Zeichnen Sie das Liniendiagramm
-            ax.plot(x_values, y_values, label='Mittlerer absoluter Preis')
+                # Anzahl der Datenpunkte bestimmen
+                data_points = len(df_grouped)
 
-            # Setzen Sie Beschriftungen und Titel
-            ax.set_xlabel('Erwerbsdatum')
-            ax.set_ylabel('Mittlerer absoluter Preis in €')
-            ax.set_title('Durchschnittliche Preisentwicklung über Zeit')
+                # Frequenz der Ticks auf der x-Achse anpassen
+                if data_points > 20:
+                    ax.xaxis.set_major_locator(mdates.YearLocator(base=3))  # Jedes dritte Jahr
+                elif data_points > 10:
+                    ax.xaxis.set_major_locator(mdates.YearLocator(base=2))  # Jedes zweite Jahr
+                else:
+                    ax.xaxis.set_major_locator(mdates.YearLocator(base=1))  # Jedes Jahr
 
-            # Fügen Sie eine Legende hinzu
-            ax.legend()
+                ax.xaxis.set_major_formatter(mdates.DateFormatter('%Y'))
 
-            # Binden Sie das Diagramm in das Tkinter-Fenster ein
-            canvas = FigureCanvasTkAgg(fig, master=self.chart_frame)
-            canvas.draw()
-            canvas.get_tk_widget().pack()
+                # Verbesserung der Darstellung auf x-Achse
+                fig.autofmt_xdate()
+
+                ax.set_xlabel('Erwerbsdatum')
+                ax.set_ylabel('Mittlerer absoluter Preis in €')
+                ax.set_title('Durchschnittliche Preisentwicklung über Zeit')
+                ax.legend()
+
+                canvas = FigureCanvasTkAgg(fig, master=self.chart_frame)
+                canvas.draw()
+                canvas.get_tk_widget().pack()
+            else:
+                label = Label(self.chart_frame,
+                              text="Nicht genügend Daten für die Analyse vorhanden (mindestens 10 erforderlich)",
+                              font=("Helvetica", 16))
+                label.pack(expand=True)
+        else:
+            label = Label(self.chart_frame, text="Zu wenige oder keine Daten zur Analyse vorhanden",
+                          font=("Helvetica", 16))
+            label.pack(expand=True)
 
 
     def apply_filters_Stadtplan(self):
