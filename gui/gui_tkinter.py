@@ -646,16 +646,19 @@ class GUIApp:
         von_year = self.von_year_dropdown.get()
         bis_month = self.bis_month_dropdown.get()
         bis_year = self.bis_year_dropdown.get()
+        selected_zuordnung = self.zuordnung_dropdown.get()
 
         # Umwandlung der Werte in ein Datumsformat
         start_date = f"{von_year}-{self.month_to_number(von_month)}-01" if von_month != 'Monat auswählen' else None
         end_date = f"{bis_year}-{self.month_to_number(bis_month)}-01" if bis_month != 'Monat auswählen' else None
 
-        # Filtern des DataFrames nach Datum
+        # Filtern des DataFrames nach Datum und Zuordnung
         filtered_df = self.filter_dataframe_by_date(start_date, end_date)
+        if selected_zuordnung != 'Zuordnung auswählen':
+            filtered_df = filtered_df[filtered_df['zuordnung'] == selected_zuordnung]
 
-        # Zeichnen des Liniendiagramms mit dem gefilterten DataFrame
-        self.draw_bar_chart()
+        # Zeichnen des Balkendiagramms mit dem gefilterten DataFrame
+        self.draw_bar_chart(filtered_df)
 
         # Optionale Ausgabe zur Überprüfung
         print("Filtered Data:")
@@ -732,7 +735,7 @@ class GUIApp:
 
         elif view == "Regionsanalyse":
             # Draw bar chart for Regionsanalyse
-            self.draw_bar_chart()
+            pass
 
 
 
@@ -750,25 +753,25 @@ class GUIApp:
         # Return the fill color for the given district number, defaulting to a color if not found in the mapping
         return district_color_mapping.get(district_number, "blue")
 
-    def draw_bar_chart(self):
+    def draw_bar_chart(self, filtered_df):
         # Clear existing content in chart_frame
         for widget in self.chart_frame.winfo_children():
             widget.destroy()
 
         # Example data for a bar chart
-        categories = ['Category A', 'Category B', 'Category C', 'Category D', 'Category E']
-        values = [15, 24, 10, 30, 18]
+        categories = filtered_df['PLZ'].unique()
+        mean_prices = filtered_df.groupby('PLZ')['Kaufpreis €'].mean()
 
         # Create a figure and axis
         fig, ax = plt.subplots()
 
         # Plot the bar chart
-        ax.bar(categories, values, label='Bar Chart')
+        ax.bar(categories, mean_prices, label='Durschnittspreis')
 
         # Set labels and title
-        ax.set_xlabel('Categories')
-        ax.set_ylabel('Values')
-        ax.set_title('Bar Chart Example')
+        ax.set_xlabel('Bezirke')
+        ax.set_ylabel('Durchschnittspreis in €')
+        ax.set_title('Durchschnittlicher Preis pro Bezirk')
 
         # Add a legend
         ax.legend()
