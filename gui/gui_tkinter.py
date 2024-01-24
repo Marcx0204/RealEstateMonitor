@@ -234,12 +234,6 @@ class GUIApp:
             von_label = tk.Label(self.filter_frame, text="Von:", font=dropdown_font)
             von_label.grid(row=3, pady=5, padx=10, sticky="w")
 
-            self.von_month_dropdown = ttk.Combobox(self.filter_frame, values=['Jan', 'Feb', 'Mar', 'Apr', 'Mai', 'Jun',
-                                                                         'Jul', 'Aug', 'Sep', 'Okt', 'Nov', 'Dez'],
-                                              style="TCombobox", font=dropdown_font)
-            self.von_month_dropdown.set('Monat auswählen')
-            self.von_month_dropdown.grid(row=4, pady=5, padx=10, sticky="w")
-
             self.von_year_dropdown = ttk.Combobox(self.filter_frame, values=list(range(min_year, max_year)),
                                              style="TCombobox", font=dropdown_font)
             self.von_year_dropdown.set('Jahr auswählen')
@@ -249,11 +243,6 @@ class GUIApp:
             bis_label = tk.Label(self.filter_frame, text="Bis:", font=dropdown_font)
             bis_label.grid(row=6, pady=5, padx=10, sticky="w")
 
-            self.bis_month_dropdown = ttk.Combobox(self.filter_frame, values=['Jan', 'Feb', 'Mar', 'Apr', 'Mai', 'Jun',
-                                                                         'Jul', 'Aug', 'Sep', 'Okt', 'Nov', 'Dez'],
-                                              style="TCombobox", font=dropdown_font)
-            self.bis_month_dropdown.set('Monat auswählen')
-            self.bis_month_dropdown.grid(row=7, pady=5, padx=10, sticky="w")
 
             self.bis_year_dropdown = ttk.Combobox(self.filter_frame, values=list(range(min_year, max_year)),
                                              style="TCombobox", font=dropdown_font)
@@ -315,33 +304,30 @@ class GUIApp:
         if selected_value == 'relativ':
             # Deaktiviere andere Dropdowns oder führe andere Aktionen aus
             self.zuordnung_dropdown['state'] = 'disabled'
-            self.von_month_dropdown['state'] = 'disabled'
             self.von_year_dropdown['state'] = 'disabled'
-            self.bis_month_dropdown['state'] = 'disabled'
             self.bis_year_dropdown['state'] = 'disabled'
         else:
             # Aktiviere die Dropdowns, wenn der Preis nicht relativ ist
             self.zuordnung_dropdown['state'] = 'normal'
             self.von_month_dropdown['state'] = 'normal'
             self.von_year_dropdown['state'] = 'normal'
-            self.bis_month_dropdown['state'] = 'normal'
             self.bis_year_dropdown['state'] = 'normal'
 
     def apply_filters_Preis(self):
         selected_bezirk = self.bezirk_dropdown.get()
-        von_month = self.von_month_dropdown.get()
         von_year = self.von_year_dropdown.get()
-        bis_month = self.bis_month_dropdown.get()
         bis_year = self.bis_year_dropdown.get()
         selected_zuordnung = self.zuordnung_dropdown.get()
         selected_preis = self.preis_dropdown.get()
 
         # Überprüfen und Einstellen der Datumsfilter
         start_date, end_date = None, None
-        if von_month != 'Monat auswählen' and von_year != 'Jahr auswählen':
-            start_date = f"{von_year}-{self.month_to_number(von_month)}-01"
-        if bis_month != 'Monat auswählen' and bis_year != 'Jahr auswählen':
-            end_date = f"{bis_year}-{self.month_to_number(bis_month)}-01"
+        if von_year != 'Jahr auswählen':
+            start_date = f"{von_year}-01-01"
+        if bis_year != 'Jahr auswählen':
+            # Setzen Sie das Enddatum auf den ersten Januar des nächsten Jahres,
+            # um den gesamten Dezember des ausgewählten Jahres einzubeziehen.
+            end_date = f"{int(bis_year) + 1}-01-01"
 
         # Filtern des DataFrames nach Datum
         filtered_df = self.filter_dataframe_by_date(start_date, end_date)
@@ -366,55 +352,6 @@ class GUIApp:
         print(filtered_df)
         return filtered_df
 
-    def draw_lineChart_relativ(self, filtered_df):
-        for widget in self.chart_frame.winfo_children():
-            widget.destroy()
-
-        if not filtered_df.empty and 'Erwerbsdatum' in filtered_df.columns and 'Kaufpreis €' in filtered_df.columns:
-            # Filterung und Gruppierung der Daten
-            df_grouped = filtered_df.groupby(filtered_df['Erwerbsdatum'].dt.to_period('Y'))[                    'Kaufpreis €'].mean().reset_index()
-            df_grouped['Erwerbsdatum'] = df_grouped['Erwerbsdatum'].dt.to_timestamp()
-
-            if len(df_grouped) >= 10:
-                x_values = df_grouped['Erwerbsdatum']
-                y_values = df_grouped['Kaufpreis €']
-
-                fig, ax = plt.subplots()
-                ax.plot(x_values, y_values, label='Durchschnittlicher Preis')
-
-                # Anzahl der Datenpunkte bestimmen
-                data_points = len(df_grouped)
-
-                # Frequenz der Ticks auf der x-Achse anpassen
-                if data_points > 20:
-                    ax.xaxis.set_major_locator(mdates.YearLocator(base=3))  # Jedes dritte Jahr
-                elif data_points > 10:
-                    ax.xaxis.set_major_locator(mdates.YearLocator(base=2))  # Jedes zweite Jahr
-                else:
-                    ax.xaxis.set_major_locator(mdates.YearLocator(base=1))  # Jedes Jahr
-
-                ax.xaxis.set_major_formatter(mdates.DateFormatter('%Y'))
-
-                # Verbesserung der Darstellung auf x-Achse
-                fig.autofmt_xdate()
-
-                ax.set_xlabel('Erwerbsdatum')
-                ax.set_ylabel('Durchschnittspreis in €')
-                ax.set_title('Durchschnittliche Preisentwicklung über Zeit')
-                ax.legend()
-
-                canvas = FigureCanvasTkAgg(fig, master=self.chart_frame)
-                canvas.draw()
-                canvas.get_tk_widget().pack()
-            else:
-                label = Label(self.chart_frame,
-                    text="Nicht genügend Daten für die Analyse vorhanden (mindestens 10 erforderlich)",
-                    font=("Helvetica", 16))
-                label.pack(expand=True)
-        else:
-            label = Label(self.chart_frame, text="Zu wenige oder keine Daten zur Analyse vorhanden",
-                  font=("Helvetica", 16))
-            label.pack(expand=True)
 
     def draw_lineChart_relativ(self, filtered_df):
         for widget in self.chart_frame.winfo_children():
@@ -471,8 +408,7 @@ class GUIApp:
         for widget in self.chart_frame.winfo_children():
             widget.destroy()
 
-        if not filtered_df.empty and 'Erwerbsdatum' in filtered_df.columns and 'Kaufpreis €' in filtered_df.columns:
-            # Filterung und Gruppierung der Daten
+        if 'Erwerbsdatum' in filtered_df.columns and 'Kaufpreis €' in filtered_df.columns:
             df_grouped = filtered_df.groupby(filtered_df['Erwerbsdatum'].dt.to_period('Y'))[
                 'Kaufpreis €'].mean().reset_index()
             df_grouped['Erwerbsdatum'] = df_grouped['Erwerbsdatum'].dt.to_timestamp()
@@ -482,26 +418,22 @@ class GUIApp:
                 y_values = df_grouped['Kaufpreis €']
 
                 fig, ax = plt.subplots()
-                ax.plot(x_values, y_values, label='Mittlerer absoluter Preis')
+                ax.plot(x_values, y_values, label='Durchschnittlicher Preis')
 
-                # Anzahl der Datenpunkte bestimmen
-                data_points = len(df_grouped)
-
-                # Frequenz der Ticks auf der x-Achse anpassen
+                # Anpassung der x-Achsen-Ticks basierend auf der Anzahl der Jahre
+                data_points = len(df_grouped['Erwerbsdatum'].dt.year.unique())
                 if data_points > 20:
-                    ax.xaxis.set_major_locator(mdates.YearLocator(base=3))  # Jedes dritte Jahr
+                    ax.xaxis.set_major_locator(mdates.YearLocator(3))  # Jedes dritte Jahr
                 elif data_points > 10:
-                    ax.xaxis.set_major_locator(mdates.YearLocator(base=2))  # Jedes zweite Jahr
+                    ax.xaxis.set_major_locator(mdates.YearLocator(2))  # Jedes zweite Jahr
                 else:
-                    ax.xaxis.set_major_locator(mdates.YearLocator(base=1))  # Jedes Jahr
+                    ax.xaxis.set_major_locator(mdates.YearLocator(1))  # Jedes Jahr
 
                 ax.xaxis.set_major_formatter(mdates.DateFormatter('%Y'))
-
-                # Verbesserung der Darstellung auf x-Achse
-                fig.autofmt_xdate()
+                fig.autofmt_xdate()  # Verbessert die Lesbarkeit der Datumsangaben
 
                 ax.set_xlabel('Erwerbsdatum')
-                ax.set_ylabel('Mittlerer absoluter Preis in €')
+                ax.set_ylabel('Durchschnittspreis in €')
                 ax.set_title('Durchschnittliche Preisentwicklung über Zeit')
                 ax.legend()
 
