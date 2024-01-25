@@ -4,6 +4,7 @@ import pandas as pd
 from tkinter import ttk
 import geopandas as gpd
 import matplotlib.pyplot as plt
+from matplotlib import ticker
 from matplotlib.backends.backend_tkagg import FigureCanvasTkAgg
 import tkintermapview
 from PIL import ImageGrab
@@ -272,12 +273,6 @@ class GUIApp:
             von_label = tk.Label(self.filter_frame, text="Von:", font=dropdown_font)
             von_label.grid(row=3, pady=5, padx=10, sticky="w")
 
-            self.von_month_dropdown = ttk.Combobox(self.filter_frame, values=['Jan', 'Feb', 'Mar', 'Apr', 'Mai', 'Jun',
-                                                                         'Jul', 'Aug', 'Sep', 'Okt', 'Nov', 'Dez'],
-                                              style="TCombobox", font=dropdown_font)
-            self.von_month_dropdown.set('Monat auswählen')
-            self.von_month_dropdown.grid(row=4, pady=5, padx=10, sticky="w")
-
             self.von_year_dropdown = ttk.Combobox(self.filter_frame, values=list(range(min_year, max_year)),
                                              style="TCombobox", font=dropdown_font)
             self.von_year_dropdown.set('Jahr auswählen')
@@ -286,12 +281,6 @@ class GUIApp:
             # Dropdowns für "Bis: Monat und Jahr"
             bis_label = tk.Label(self.filter_frame, text="Bis:", font=dropdown_font)
             bis_label.grid(row=6, pady=5, padx=10, sticky="w")
-
-            self.bis_month_dropdown = ttk.Combobox(self.filter_frame, values=['Jan', 'Feb', 'Mar', 'Apr', 'Mai', 'Jun',
-                                                                         'Jul', 'Aug', 'Sep', 'Okt', 'Nov', 'Dez'],
-                                              style="TCombobox", font=dropdown_font)
-            self.bis_month_dropdown.set('Monat auswählen')
-            self.bis_month_dropdown.grid(row=7, pady=5, padx=10, sticky="w")
 
             self.bis_year_dropdown = ttk.Combobox(self.filter_frame, values=list(range(min_year, max_year)),
                                              style="TCombobox", font=dropdown_font)
@@ -657,8 +646,13 @@ class GUIApp:
         selected_zuordnung = self.zuordnung_dropdown.get()
 
         # Umwandlung der Werte in ein Datumsformat
-        start_date = f"{von_year}-{self.month_to_number(von_month)}-01" if von_month != 'Monat auswählen' else None
-        end_date = f"{bis_year}-{self.month_to_number(bis_month)}-01" if bis_month != 'Monat auswählen' else None
+        start_date, end_date = None, None
+        if von_year != 'Jahr auswählen':
+            start_date = f"{von_year}-01-01"
+        if bis_year != 'Jahr auswählen':
+            # Setzen Sie das Enddatum auf den ersten Januar des nächsten Jahres,
+            # um den gesamten Dezember des ausgewählten Jahres einzubeziehen.
+            end_date = f"{int(bis_year) + 1}-01-01"
 
         # Filtern des DataFrames nach Datum und Zuordnung
         filtered_df = self.filter_dataframe_by_date(start_date, end_date)
@@ -666,7 +660,7 @@ class GUIApp:
             filtered_df = filtered_df[filtered_df['zuordnung'] == selected_zuordnung]
 
         # Zeichnen des Balkendiagramms mit dem gefilterten DataFrame
-        self.draw_bar_chart(filtered_df)
+        self.draw_bar_chart(filtered_df, selected_zuordnung)
 
         # Optionale Ausgabe zur Überprüfung
         print("Filtered Data:")
@@ -761,7 +755,7 @@ class GUIApp:
         # Return the fill color for the given district number, defaulting to a color if not found in the mapping
         return district_color_mapping.get(district_number, "blue")
 
-    def draw_bar_chart(self, original_df):
+    def draw_bar_chart(self, original_df, target_zuordnung):
         # Clear existing content in chart_frame
         for widget in self.chart_frame.winfo_children():
             widget.destroy()
@@ -785,39 +779,51 @@ class GUIApp:
             selected_bezirke = group_ranges[selected_group]
             filtered_df = filtered_df[filtered_df['PLZ'].isin(selected_bezirke)]
 
-            if not filtered_df.empty:
-                unique_bezirke = filtered_df['PLZ'].nunique()
-                if unique_bezirke >= 3:  # Mindestens 3 Bezirke für die Analyse
-                    categories = filtered_df['PLZ'].unique()
-                    mean_prices = filtered_df.groupby('PLZ')['Kaufpreis €'].mean()
+            # Check if there is no data for the specified Zuordnung
+            if target_zuordnung != 'Zuordnung auswählen' and target_zuordnung not in filtered_df['zuordnung'].unique():
+                messagebox.showinfo("Info",
+                                    f"Keine Daten vorhanden für Bezirksgruppe: {selected_group}, Zuordnung: {target_zuordnung}.")
+                return
 
-                    # Figur und Achse erstellen
-                    fig, ax = plt.subplots()
+            # Check if there is no data for the specified group
+            if filtered_df.empty:
+                messagebox.showinfo("Info", f"Keine Daten vorhanden für Bezirksgruppe: {selected_group}.")
+                return
 
-                    # Balkendiagramm
-                    ax.bar(categories, mean_prices, label='Durchschnittspreis', width=4)
+            # Filter DataFrame for the target Zuordnung
+            if target_zuordnung != 'Zuordnung auswählen':
+                filtered_df = filtered_df[filtered_df['zuordnung'] == target_zuordnung]
 
-                    # Labels und Titel
-                    ax.set_xlabel('Bezirke')
-                    ax.set_ylabel('Durchschnittspreis in €')
-                    ax.set_title('Durchschnittlicher Preis pro Bezirk')
+            # Check the number of data points
+            num_data_points = filtered_df.shape[0]
+            if num_data_points < 10:
+                messagebox.showinfo("Info",
+                                    f"Nicht genügend Daten vorhanden für Bezirksgruppe: {selected_group}, Zuordnung: {target_zuordnung}.")
+                return
 
-                    # Legende
-                    ax.legend()
+            categories = filtered_df['PLZ'].unique()
+            real_estate_counts = filtered_df.groupby('PLZ').size()
 
-                    # Diagramm einbinden
-                    canvas = FigureCanvasTkAgg(fig, master=self.chart_frame)
-                    canvas.draw()
-                    canvas.get_tk_widget().pack()
-                else:
-                    label = Label(self.chart_frame,
-                                  text="Nicht genügend Daten für die Analyse vorhanden (mindestens 3 Bezirke erforderlich)",
-                                  font=("Helvetica", 16))
-                    label.pack(expand=True)
-            else:
-                label = Label(self.chart_frame, text="Keine Daten vorhanden für die ausgewählte Bezirksgruppe",
-                              font=("Helvetica", 16))
-                label.pack(expand=True)
+            # Figur und Achse erstellen
+            fig, ax = plt.subplots()
+
+            # Balkendiagramm und Breite der Balken
+            ax.bar(categories, real_estate_counts, label=f'Anzahl {target_zuordnung}', width=4)
+
+            # Labels
+            ax.set_xlabel('Bezirke')
+            ax.set_ylabel(f'Anzahl {target_zuordnung}')
+            ax.set_title(f'Anzahl {target_zuordnung} pro Bezirk')
+
+            ax.yaxis.set_major_locator(ticker.MaxNLocator(integer=True))
+
+            # Legende
+            ax.legend()
+
+            # Embed the chart in the Tkinter window
+            canvas = FigureCanvasTkAgg(fig, master=self.chart_frame)
+            canvas.draw()
+            canvas.get_tk_widget().pack()
         else:
             print("Invalid Bezirksgruppe selected.")
 
